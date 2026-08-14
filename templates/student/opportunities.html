@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Oportunidades de Pasantía | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-briefcase"></i> Oportunidades de Pasantía
+    </h1>
+    <p style="color: var(--text-secondary);">Encuentra la pasantía perfecta para tu carrera</p>
+</div>
+
+<!-- FILTROS Y BÚSQUEDA -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="form-row">
+        <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+            <input 
+                type="text" 
+                id="search-input"
+                class="form-input" 
+                placeholder="Busca por posición, empresa, ubicación..."
+                style="font-size: 1rem; padding: 1rem;"
+            >
+        </div>
+    </div>
+
+    <div class="form-row" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="margin-bottom: 0.3rem;">Ubicación</label>
+            <select id="location-filter" class="form-select">
+                <option value="">Todas las ciudades</option>
+                <option value="bogota">Bogotá</option>
+                <option value="medellin">Medellín</option>
+                <option value="cali">Cali</option>
+                <option value="barranquilla">Barranquilla</option>
+                <option value="remoto">Remoto</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="margin-bottom: 0.3rem;">Área</label>
+            <select id="area-filter" class="form-select">
+                <option value="">Todas las áreas</option>
+                <option value="frontend">Frontend</option>
+                <option value="backend">Backend</option>
+                <option value="fullstack">Full Stack</option>
+                <option value="devops">DevOps</option>
+                <option value="qa">QA</option>
+                <option value="datascience">Data Science</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="margin-bottom: 0.3rem;">Horas</label>
+            <select id="hours-filter" class="form-select">
+                <option value="">Cualquier duración</option>
+                <option value="160">160 horas</option>
+                <option value="180">180 horas</option>
+                <option value="200">200 horas</option>
+                <option value="240">240+ horas</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="margin-bottom: 0.3rem;">Ordenar</label>
+            <select id="sort-filter" class="form-select">
+                <option value="-created_at">Más recientes</option>
+                <option value="deadline">Próximo a vencer</option>
+                <option value="company">Empresa A-Z</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" id="apply-filters" style="align-self: flex-end;">
+            <i class="fas fa-filter"></i> Filtrar
+        </button>
+    </div>
+</div>
+
+<!-- GRID DE OPORTUNIDADES -->
+<div id="opportunities-container" class="grid grid-2">
+    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <div class="loading"></div>
+        <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando oportunidades...</p>
+    </div>
+</div>
+
+<!-- PAGINACIÓN -->
+<div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+    <button id="prev-page" class="btn btn-outline" style="min-width: 120px;">
+        <i class="fas fa-chevron-left"></i> Anterior
+    </button>
+    <div id="page-info" style="padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+        Página 1
+    </div>
+    <button id="next-page" class="btn btn-outline" style="min-width: 120px;">
+        Siguiente <i class="fas fa-chevron-right"></i>
+    </button>
+</div>
+
+<!-- MODAL DE DETALLES -->
+<div id="opportunity-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modal-title">Detalles de la Oportunidad</h2>
+            <button type="button" class="modal-close">&times;</button>
+        </div>
+
+        <div class="modal-body" id="modal-body" style="padding: 1.5rem;">
+            <!-- Contenido dinamicamente cargado -->
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="toggleModal('opportunity-modal', false)">
+                Cerrar
+            </button>
+            <button type="button" class="btn btn-primary" id="apply-btn" onclick="applyNow()">
+                <i class="fas fa-paper-plane"></i> Aplicar Ahora
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let currentFilters = {};
+let selectedOpportunityId = null;
+
+// Cargar oportunidades
+async function loadOpportunities() {
+    try {
+        const opportunities = await SkillBridge.getOpportunities({
+            page: currentPage,
+            ...currentFilters
+        });
+
+        const container = document.getElementById('opportunities-container');
+        
+        if (!opportunities || opportunities.results.length === 0) {
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                    <i class="fas fa-search" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+                    <p style="color: var(--text-secondary);">No se encontraron oportunidades con los filtros aplicados</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        opportunities.results.forEach(opp => {
+            html += `
+                <div class="card" style="cursor: pointer; transition: all 0.3s;" onclick="showOpportunityDetails(${opp.id})">
+                    <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+                        <div>
+                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">${opp.position}</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                                <i class="fas fa-building"></i> ${opp.company.name}
+                            </p>
+                        </div>
+                        <span class="badge badge-primary">${opp.required_hours}h</span>
+                    </div>
+
+                    <div class="card-body" style="padding: 1rem 0; margin-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text-secondary); font-size: 0.9rem;">
+                                <i class="fas fa-map-marker-alt"></i> ${opp.location}
+                            </span>
+                            <span style="display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text-secondary); font-size: 0.9rem;">
+                                <i class="fas fa-calendar-alt"></i> Hasta ${new Date(opp.deadline).toLocaleDateString('es-ES')}
+                            </span>
+                        </div>
+
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                            ${opp.description.substring(0, 100)}...
+                        </p>
+
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            ${opp.required_skills.map(skill => `<span class="badge badge-secondary">${skill}</span>`).join('')}
+                        </div>
+
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-secondary); font-size: 0.85rem;">
+                                ${opp.applicants_count} aplicantes
+                            </span>
+                            <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); showOpportunityDetails(${opp.id})">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        updatePagination(opportunities);
+    } catch (error) {
+        console.error('Error cargando oportunidades:', error);
+    }
+}
+
+// Mostrar detalles de oportunidad
+async function showOpportunityDetails(opportunityId) {
+    try {
+        // Simular obtención de detalles
+        const opportunities = await SkillBridge.getOpportunities();
+        const opp = opportunities.results.find(o => o.id === opportunityId);
+
+        if (!opp) return;
+
+        selectedOpportunityId = opportunityId;
+
+        const modalBody = document.getElementById('modal-body');
+        modalBody.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem;">${opp.position}</h3>
+                    <p style="color: var(--text-secondary); font-size: 1rem;">
+                        <i class="fas fa-building"></i> ${opp.company.name}
+                    </p>
+                </div>
+                <div>
+                    <span class="badge badge-primary" style="font-size: 0.95rem; padding: 0.5rem 1rem;">
+                        ${opp.required_hours} horas
+                    </span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Ubicación</p>
+                    <p style="font-weight: 600;">${opp.location}</p>
+                </div>
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Vence el</p>
+                    <p style="font-weight: 600;">${new Date(opp.deadline).toLocaleDateString('es-ES')}</p>
+                </div>
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Área</p>
+                    <p style="font-weight: 600;">${opp.area}</p>
+                </div>
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Aplicantes</p>
+                    <p style="font-weight: 600;">${opp.applicants_count}</p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Descripción</h4>
+                <p style="color: var(--text-secondary); line-height: 1.8;">${opp.description}</p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-weight: 600; margin-bottom: 0.8rem;">Habilidades Requeridas</h4>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    ${opp.required_skills.map(skill => `<span class="badge badge-secondary">${skill}</span>`).join('')}
+                </div>
+            </div>
+
+            <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem;">
+                <h4 style="font-weight: 600; margin-bottom: 0.5rem;">Acerca de ${opp.company.name}</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">${opp.company.description}</p>
+            </div>
+        `;
+
+        toggleModal('opportunity-modal', true);
+    } catch (error) {
+        console.error('Error cargando detalles:', error);
+    }
+}
+
+// Aplicar a la oportunidad
+async function applyNow() {
+    if (!selectedOpportunityId) return;
+
+    const button = document.getElementById('apply-btn');
+    button.disabled = true;
+    button.innerHTML = '<div class="loading"></div> Aplicando...';
+
+    const success = await SkillBridge.applyToOpportunity(selectedOpportunityId);
+
+    if (success) {
+        toggleModal('opportunity-modal', false);
+        loadOpportunities();
+    }
+
+    button.disabled = false;
+    button.innerHTML = '<i class="fas fa-paper-plane"></i> Aplicar Ahora';
+}
+
+// Actualizar paginación
+function updatePagination(data) {
+    document.getElementById('page-info').textContent = `Página ${data.current_page} de ${data.total_pages}`;
+    
+    document.getElementById('prev-page').disabled = !data.previous;
+    document.getElementById('next-page').disabled = !data.next;
+}
+
+// Aplicar filtros
+document.getElementById('apply-filters').addEventListener('click', () => {
+    currentFilters = {
+        search: document.getElementById('search-input').value,
+        location: document.getElementById('location-filter').value,
+        area: document.getElementById('area-filter').value,
+        hours: document.getElementById('hours-filter').value,
+        sort: document.getElementById('sort-filter').value
+    };
+
+    currentPage = 1;
+    loadOpportunities();
+});
+
+// Paginación
+document.getElementById('prev-page').addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        loadOpportunities();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
+
+document.getElementById('next-page').addEventListener('click', () => {
+    currentPage++;
+    loadOpportunities();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Cargar al iniciar
+document.addEventListener('DOMContentLoaded', loadOpportunities);
+</script>
+{% endblock %}

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SkillBridge - Plataforma de Pasantías{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{% url 'frontend:home' %}" class="navbar-brand">
+                <img src="/static/images/logo.svg" alt="SkillBridge" class="brand-logo" />
+                <span class="sr-only">SkillBridge</span>
+            </a>
+
+            <ul class="navbar-menu">
+                <li><a href="{% url 'frontend:home' %}">Inicio</a></li>
+                {% if request.user.is_authenticated %}
+                    {% if user_roles|length > 0 %}
+                        {% if "STUDENT" in user_roles %}
+                            <li><a href="{% url 'frontend:internships' %}">Oportunidades</a></li>
+                            <li><a href="{% url 'frontend:my-applications' %}">Mis Aplicaciones</a></li>
+                        {% endif %}
+                        {% if "COMPANY" in user_roles %}
+                            <li><a href="{% url 'frontend:company-offers' %}">Mis Ofertas</a></li>
+                            <li><a href="{% url 'frontend:company-internships' %}">Pasantías</a></li>
+                        {% endif %}
+                        {% if "COORDINATOR" in user_roles or "INSTITUTION_ADMIN" in user_roles or "SUPER_ADMIN" in user_roles %}
+                            <li><a href="{% url 'frontend:admin-dashboard' %}">Administración</a></li>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </ul>
+
+            <div class="navbar-user">
+                <button id="theme-toggle" class="btn btn-outline btn-small" title="Cambiar tema">☀️</button>
+                {% if request.user.is_authenticated %}
+                    <div class="user-avatar" title="{{ request.user.get_full_name }}">
+                        {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                    </div>
+                    <span>{{ request.user.first_name|default:request.user.username }}</span>
+                    <a href="{% url 'frontend:logout' %}" class="logout-btn">Salir</a>
+                {% else %}
+                    <a href="{% url 'frontend:login' %}" class="logout-btn">Iniciar Sesión</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    {% if request.user.is_authenticated %}
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                {% if "STUDENT" in user_roles %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:student-dashboard' %}" class="{% if request.resolver_match.url_name == 'student-dashboard' %}active{% endif %}">
+                            <span class="sidebar-icon">📊</span>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:internships' %}" class="{% if request.resolver_match.url_name == 'internships' %}active{% endif %}">
+                            <span class="sidebar-icon">💼</span>
+                            Oportunidades
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:my-applications' %}" class="{% if request.resolver_match.url_name == 'my-applications' %}active{% endif %}">
+                            <span class="sidebar-icon">📝</span>
+                            Mis Aplicaciones
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:my-internships' %}" class="{% if request.resolver_match.url_name == 'my-internships' %}active{% endif %}">
+                            <span class="sidebar-icon">🎓</span>
+                            Mis Pasantías
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                            <span class="sidebar-icon">👤</span>
+                            Perfil
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if "COMPANY" in user_roles or "COMPANY_SUPERVISOR" in user_roles %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:company-dashboard' %}" class="{% if request.resolver_match.url_name == 'company-dashboard' %}active{% endif %}">
+                            <span class="sidebar-icon">📊</span>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:company-offers' %}" class="{% if request.resolver_match.url_name == 'company-offers' %}active{% endif %}">
+                            <span class="sidebar-icon">📋</span>
+                            Mis Ofertas
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:company-internships' %}" class="{% if request.resolver_match.url_name == 'company-internships' %}active{% endif %}">
+                            <span class="sidebar-icon">👥</span>
+                            Pasantías Activas
+                        </a>
+                    </li>
+                    {% if "COMPANY_SUPERVISOR" in user_roles %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:hours-validation' %}" class="{% if request.resolver_match.url_name == 'hours-validation' %}active{% endif %}">
+                            <span class="sidebar-icon">⏰</span>
+                            Validar Horas
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:company-profile' %}" class="{% if request.resolver_match.url_name == 'company-profile' %}active{% endif %}">
+                            <span class="sidebar-icon">🏢</span>
+                            Perfil Empresa
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if "COORDINATOR" in user_roles or "INSTITUTION_ADMIN" in user_roles or "SUPER_ADMIN" in user_roles %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:admin-dashboard' %}" class="{% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
+                            <span class="sidebar-icon">📊</span>
+                            Dashboard Admin
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:students-management' %}" class="{% if request.resolver_match.url_name == 'students-management' %}active{% endif %}">
+                            <span class="sidebar-icon">👨‍🎓</span>
+                            Estudiantes
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:internships-monitoring' %}" class="{% if request.resolver_match.url_name == 'internships-monitoring' %}active{% endif %}">
+                            <span class="sidebar-icon">📈</span>
+                            Monitoreo
+                        </a>
+                    </li>
+                    {% if "SUPER_ADMIN" in user_roles %}
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:institutions' %}" class="{% if request.resolver_match.url_name == 'institutions' %}active{% endif %}">
+                            <span class="sidebar-icon">🏛️</span>
+                            Instituciones
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="{% url 'frontend:companies-management' %}" class="{% if request.resolver_match.url_name == 'companies-management' %}active{% endif %}">
+                            <span class="sidebar-icon">🏭</span>
+                            Empresas
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endif %}
+
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border-color);">
+                
+                <li class="sidebar-menu-item">
+                    <a href="{% url 'frontend:help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">
+                        <span class="sidebar-icon">❓</span>
+                        Ayuda
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="main-content">
+            {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <span>{{ message }}</span>
+                    <span class="alert-close" onclick="this.parentElement.style.display='none';">×</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+        {% block public_content %}{% endblock %}
+    {% endif %}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

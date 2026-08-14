@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title|default:"Página" }} - SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-{{ page_icon|default:'tools' }}"></i> {{ page_title|default:"Página" }}
+    </h1>
+    <p style="color: var(--text-secondary);">{{ page_description|default:"Esta sección ya está disponible para ti." }}</p>
+</div>
+
+{{ body_html|safe }}
+{% endblock %}

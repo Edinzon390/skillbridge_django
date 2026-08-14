@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Mis ofertas - Empresa{% endblock %}
+
+{% block content %}
+<h1>Mis ofertas</h1>
+
+{% if offers %}
+  <div class="company-offers-list">
+    {% for offer in offers %}
+        <div class="card mb-2">
+          <div class="card-body">
+            <h3 class="card-title">{{ offer.title }}</h3>
+            <p class="text-muted">{{ offer.description|truncatechars:200 }}</p>
+            <p><strong>Modalidad:</strong> {{ offer.get_modality_display }}</p>
+            <p class="table-actions">
+              <a class="btn btn-small btn-outline" href="{% url 'frontend:edit-offer' offer.id %}">Editar</a>
+              <a class="btn btn-small btn-white" href="{% url 'frontend:company-offer-detail' offer.id %}">Ver</a>
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+{% else %}
+  <p>No hay ofertas publicadas todavía.</p>
+  <p><a class="btn" href="{% url 'frontend:create-offer' %}">Crear nueva oferta</a></p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,263 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from accounts.models import Role, User
+from companies.models import Company, Supervisor
+from internships.models import Opportunity
+from institutions.models import Institution, TechnicalCareer
+from django.utils import timezone
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+import json
+
+
+def get_dashboard_redirect_url(user):
+    if not user.is_authenticated:
+        return 'frontend:login'
+    if user.role in {Role.COORDINATOR, Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN}:
+        return 'frontend:admin-dashboard'
+    if user.role == Role.COMPANY:
+        return 'frontend:company-dashboard'
+    return 'frontend:student-dashboard'
+
+
+def register_submit(request):
+    if request.user.is_authenticated:
+        return redirect(get_dashboard_redirect_url(request.user))
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '').strip()
+        selected_role = request.POST.get('role', '').strip().lower()
+        company_name = request.POST.get('company_name', '').strip()
+
+        if not email or not password:
+            messages.error(request, 'El correo y la contraseña son obligatorios.')
+            return render(request, 'auth/register.html')
+
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base_username}{counter}'
+            counter += 1
+
+        role = Role.COMPANY if selected_role == 'company' else Role.STUDENT
+        # Create user with provided credentials (corrected)
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.role = role
+        user.save()
+
+        if role == Role.COMPANY and company_name:
+            company, created = Company.objects.get_or_create(name=company_name)
+            if created:
+                # New companies require admin validation by default; leave is_validated False
+                company.is_active = True
+                company.save()
+            user.company = company
+            user.save()
+
+        login(request, user)
+        messages.success(request, 'Cuenta creada correctamente.')
+        return redirect(get_dashboard_redirect_url(user))
+
+    return render(request, 'auth/register.html')
+
+
+@login_required(login_url='frontend:login')
+def create_offer_view(request):
+    if request.method == 'POST':
+        user = request.user
+        company = getattr(user, 'company', None)
+        if company is None:
+            company_name = request.POST.get('company_name', '').strip() or f'Empresa de {user.username}'
+            company, _ = Company.objects.get_or_create(name=company_name)
+            # Do not auto-validate companies created during offer creation
+            company.save()
+            user.company = company
+            user.save()
+
+        title = request.POST.get('position', '').strip() or 'Sin título'
+        description = request.POST.get('description', '').strip()
+        location = request.POST.get('location', '').strip()
+        location_type = request.POST.get('location_type', 'on-site')
+        area = request.POST.get('area', '').strip()
+        required_skills = request.POST.get('required_skills', '')
+        nice_to_have = request.POST.get('nice_to_have', '')
+        benefits = request.POST.get('benefits', '')
+        is_paid = bool(request.POST.get('is_paid'))
+        salary_min = request.POST.get('salary_min') or None
+        salary_max = request.POST.get('salary_max') or None
+        supervisor_name = request.POST.get('supervisor_name', '').strip()
+        supervisor_email = request.POST.get('supervisor_email', '').strip()
+        supervisor_phone = request.POST.get('supervisor_phone', '').strip()
+        contact_email = request.POST.get('contact_email', '').strip()
+        contact_phone = request.POST.get('contact_phone', '').strip()
+        deadline = request.POST.get('deadline')
+
+        modality_map = {
+            'on-site': Opportunity.Modality.PRESENTIAL,
+            'remote': Opportunity.Modality.REMOTE,
+            'hybrid': Opportunity.Modality.HYBRID
+        }
+        modality = modality_map.get(location_type, Opportunity.Modality.PRESENTIAL)
+
+        institution, _ = Institution.objects.get_or_create(name='Plataforma Pública')
+        career, _ = TechnicalCareer.objects.get_or_create(institution=institution, name=area or 'General')
+
+        requirements_list = [s.strip() for s in required_skills.split(',') if s.strip()]
+
+        deadline_dt = None
+        if deadline:
+            try:
+                d = timezone.datetime.strptime(deadline, '%Y-%m-%d').date()
+                deadline_dt = timezone.make_aware(timezone.datetime(d.year, d.month, d.day, 23, 59, 59))
+            except Exception:
+                deadline_dt = None
+
+        supervisor = None
+        if supervisor_email:
+            supervisor, _ = Supervisor.objects.get_or_create(
+                company=company,
+                email=supervisor_email,
+                defaults={'full_name': supervisor_name or supervisor_email.split('@')[0], 'phone': supervisor_phone}
+            )
+
+        opp = Opportunity.objects.create(
+            institution=institution,
+            company=company,
+            career=career,
+            title=title,
+            description=description or 'Sin descripción',
+            requirements=requirements_list,
+            vacancies=1,
+            modality=modality,
+            deadline=deadline_dt or timezone.now() + timezone.timedelta(days=30),
+            status=Opportunity.Status.ACTIVE
+        )
+
+        messages.success(request, 'Oferta creada correctamente.')
+        return redirect('frontend:company-offers')
+
+    # GET -> render the create offer template
+    return render(request, 'company/create-offer.html')
+
+
+@login_required(login_url='frontend:login')
+def edit_offer_view(request, offer_id):
+    # Prefer a safe lookup so we can show a friendly message instead of a hard 404
+    opp = Opportunity.objects.filter(id=offer_id).first()
+    if not opp:
+        messages.error(request, 'La oferta solicitada no existe.')
+        return redirect('frontend:company-offers')
+
+    user = request.user
+    if not (user.is_staff or user.is_superuser or (hasattr(user, 'company') and user.company and user.company.id == opp.company_id)):
+        messages.error(request, 'No tienes permisos para editar esta oferta.')
+        return redirect('frontend:company-offers')
+
+    if request.method == 'POST':
+        opp.title = request.POST.get('position', opp.title).strip()
+        opp.description = request.POST.get('description', opp.description).strip()
+        area = request.POST.get('area', '')
+        career, _ = TechnicalCareer.objects.get_or_create(institution=opp.institution, name=area or 'General')
+        opp.career = career
+        opp.requirements = [s.strip() for s in request.POST.get('required_skills', '').split(',') if s.strip()]
+        # Keep vacancies if not provided; fall back to current value
+        try:
+            opp.vacancies = int(request.POST.get('vacancies') or opp.vacancies)
+        except Exception:
+            pass
+        loc_type = request.POST.get('location_type', 'on-site')
+        modality_map = {'on-site': Opportunity.Modality.PRESENTIAL, 'remote': Opportunity.Modality.REMOTE, 'hybrid': Opportunity.Modality.HYBRID}
+        opp.modality = modality_map.get(loc_type, opp.modality)
+        deadline = request.POST.get('deadline')
+        if deadline:
+            try:
+                d = timezone.datetime.strptime(deadline, '%Y-%m-%d').date()
+                opp.deadline = timezone.make_aware(timezone.datetime(d.year, d.month, d.day, 23, 59, 59))
+            except Exception:
+                pass
+        opp.save()
+
+        supervisor_email = request.POST.get('supervisor_email', '').strip()
+        if supervisor_email:
+            supervisor_name = request.POST.get('supervisor_name', '').strip()
+            supervisor_phone = request.POST.get('supervisor_phone', '').strip()
+            Supervisor.objects.update_or_create(
+                company=opp.company,
+                email=supervisor_email,
+                defaults={'full_name': supervisor_name or supervisor_email.split('@')[0], 'phone': supervisor_phone}
+            )
+
+        messages.success(request, 'Oferta actualizada correctamente.')
+        return redirect('frontend:company-offers')
+
+    context = {'offer': opp}
+    return render(request, 'company/create-offer.html', context)
+
+
+@login_required(login_url='frontend:login')
+def company_profile_view(request):
+    user = request.user
+    company = getattr(user, 'company', None)
+    if not company:
+        messages.info(request, 'No tienes una empresa asociada. Puedes crear una en el registro o en el perfil.')
+        return redirect('frontend:company-dashboard')
+
+    if request.method == 'POST':
+        company.name = request.POST.get('name', company.name).strip()
+        company.email = request.POST.get('email', company.email).strip()
+        company.phone = request.POST.get('phone', company.phone).strip()
+        company.website = request.POST.get('website', company.website).strip()
+        company.address = request.POST.get('address', company.address).strip()
+        company.save()
+        messages.success(request, 'Perfil de empresa actualizado.')
+        return redirect('frontend:company-profile')
+
+    return render(request, 'company/profile.html', {'company': company})
+
+
+@require_POST
+def save_chat_message(request):
+    try:
+        data = json.loads(request.body.decode('utf-8')) if request.body else request.POST
+    except Exception:
+        data = request.POST
+
+    user_message = data.get('user_message') or data.get('user_message', '')
+    bot_response = data.get('bot_response') or data.get('bot_response', '')
+
+    user = request.user if request.user.is_authenticated else None
+    try:
+        from notifications.models import SupportMessage
+        SupportMessage.objects.create(user=user, user_message=user_message, bot_response=bot_response)
+    except Exception:
+        return JsonResponse({'ok': False}, status=500)
+
+    return JsonResponse({'ok': True})
+
+
+@login_required(login_url='frontend:login')
+def company_offers_json(request):
+    """Return a JSON list of offers that belong to the logged-in user's company."""
+    user = request.user
+    company = getattr(user, 'company', None)
+    if not company:
+        return JsonResponse({'offers': []})
+
+    qs = Opportunity.objects.filter(company=company).order_by('-created_at')
+    offers = []
+    for opp in qs:
+        offers.append({
+            'id': opp.id,
+            'title': opp.title,
+            'description': (opp.description[:200] + '...') if len(opp.description or '') > 200 else (opp.description or ''),
+            'modality': opp.get_modality_display() if hasattr(opp, 'get_modality_display') else opp.modality,
+            'applicants': opp.applications.count() if hasattr(opp, 'applications') else 0,
+            'vacancies': opp.vacancies,
+            'status': opp.status,
+        })
+    return JsonResponse({'offers': offers})

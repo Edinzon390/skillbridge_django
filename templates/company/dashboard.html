@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Empresa | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-building"></i> Dashboard Empresarial
+    </h1>
+    <p style="color: var(--text-secondary);">Gestiona tus ofertas de pasantías y candidatos</p>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-clipboard-list"></i> Ofertas Activas
+        </div>
+        <div class="stat-value" id="active-offers">0</div>
+        <div class="stat-change positive">
+            Buscando candidatos
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-user-check"></i> Aplicantes
+        </div>
+        <div class="stat-value" id="total-applicants">0</div>
+        <div class="stat-change">
+            <span id="pending-review">0</span> por revisar
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-users-cog"></i> Pasantías Activas
+        </div>
+        <div class="stat-value" id="active-internships">0</div>
+        <div class="stat-change positive">
+            En progreso
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-star"></i> Evaluación Promedio
+        </div>
+        <div class="stat-value" id="avg-rating">0</div>
+        <div class="stat-change positive">
+            <i class="fas fa-star"></i> <i class="fas fa-star"></i> <i class="fas fa-star"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ACCIONES RÁPIDAS -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-bolt"></i> Acciones Rápidas
+        </h2>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-4" style="gap: 1rem;">
+            <a href="{% url 'frontend:create-offer' %}" class="btn btn-primary btn-block">
+                <i class="fas fa-plus"></i> Nueva Oferta
+            </a>
+            <a href="{% url 'frontend:company-internships' %}" class="btn btn-secondary btn-block">
+                <i class="fas fa-chart-line"></i> Ver Pasantías
+            </a>
+            <button class="btn btn-outline btn-block" onclick="exportReport()">
+                <i class="fas fa-download"></i> Descargar Reporte
+            </button>
+            <a href="{% url 'frontend:company-profile' %}" class="btn btn-outline btn-block">
+                <i class="fas fa-cog"></i> Configuración
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- OFERTAS RECIENTES -->
+<div class="grid grid-2">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-briefcase"></i> Mis Ofertas
+            </h2>
+            <a href="{% url 'frontend:company-offers' %}" class="btn btn-primary btn-small">Ver todas</a>
+        </div>
+        <div class="card-body" id="my-offers">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading"></div>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando ofertas...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- APLICANTES PENDIENTES -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-inbox"></i> Aplicantes Pendientes
+            </h2>
+            <a href="{% url 'frontend:applicants' %}" class="btn btn-primary btn-small">Ver todos</a>
+        </div>
+        <div class="card-body" id="pending-applicants">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading"></div>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando aplicantes...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLA DE PASANTÍAS ACTIVAS -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-graduation-cap"></i> Pasantías en Progreso
+        </h2>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Posición</th>
+                    <th>Inicio</th>
+                    <th>Fin Esperado</th>
+                    <th>Horas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="active-internships-table">
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2rem;">
+                        <div class="loading"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MÉTRICAS DE DESEMPEÑO -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-chart-bar"></i> Métricas de Desempeño
+        </h2>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-2">
+            <div>
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600;">
+                    Tasa de Aceptación de Ofertas
+                </p>
+                <div style="background: var(--light-bg); border-radius: 0.5rem; height: 10px; overflow: hidden;">
+                    <div style="background: var(--primary-color); height: 100%; width: 75%;"></div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">75% (3 de 4 ofertas aceptadas)</p>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600;">
+                    Satisfacción de Estudiantes
+                </p>
+                <div style="background: var(--light-bg); border-radius: 0.5rem; height: 10px; overflow: hidden;">
+                    <div style="background: var(--success-color); height: 100%; width: 88%;"></div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">4.4/5 estrellas</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadCompanyDashboard() {
+    try {
+        // Cargar estadísticas
+        const stats = {
+            activeOffers: 5,
+            totalApplicants: 24,
+            pendingReview: 8,
+            activeInternships: 3,
+            avgRating: 4.4
+        };
+
+        document.getElementById('active-offers').textContent = stats.activeOffers;
+        document.getElementById('total-applicants').textContent = stats.totalApplicants;
+        document.getElementById('pending-review').textContent = stats.pendingReview;
+        document.getElementById('active-internships').textContent = stats.activeInternships;
+        document.getElementById('avg-rating').textContent = stats.avgRating;
+
+        // Cargar ofertas
+        loadMyOffers();
+        loadPendingApplicants();
+        loadActiveInternships();
+    } catch (error) {
+        console.error('Error cargando dashboard:', error);
+    }
+}
+
+async function loadMyOffers() {
+    try {
+        const resp = await fetch('{% url "frontend:company-offers-json" %}', { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('Error cargando ofertas');
+        const payload = await resp.json();
+        const offers = payload.offers || [];
+
+        if (!offers.length) {
+            document.getElementById('my-offers').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No hay ofertas publicadas</p>';
+            return;
+        }
+
+        let html = '';
+        offers.forEach(offer => {
+            const statusBadge = offer.status === 'ACTIVE' ? 'badge-success' : 'badge-warning';
+            const statusText = offer.status === 'ACTIVE' ? 'Activa' : (offer.status === 'CLOSED' ? 'Cerrada' : 'Completada');
+            html += `
+                <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div>
+                            <p style="font-weight: 600; margin-bottom: 0.3rem;">${offer.title}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">${offer.description}</p>
+                        </div>
+                        <span class="badge ${statusBadge}">${statusText}</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.8rem;">
+                        ${offer.applicants} aplicantes • ${offer.vacancies}h requeridas
+                    </p>
+                    <div class="table-actions">
+                        <a href="/company/offers/${offer.id}/" class="btn btn-primary btn-small">Ver Detalles</a>
+                        <a href="/company/offers/${offer.id}/applicants/" class="btn btn-secondary btn-small">Ver Aplicantes</a>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('my-offers').innerHTML = html;
+    } catch (err) {
+        console.error('loadMyOffers error', err);
+        document.getElementById('my-offers').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No se pudieron cargar las ofertas</p>';
+    }
+}
+
+function loadPendingApplicants() {
+    const applicants = [
+        {
+            id: 1,
+            name: 'Carlos González',
+            position: 'Frontend Developer',
+            date: '2024-08-10',
+            rating: 4.8
+        },
+        {
+            id: 2,
+            name: 'María López',
+            position: 'Backend Developer',
+            date: '2024-08-09',
+            rating: 4.5
+        },
+        {
+            id: 3,
+            name: 'Juan Pérez',
+            position: 'QA Engineer',
+            date: '2024-08-08',
+            rating: 4.2
+        }
+    ];
+
+    let html = '';
+    applicants.forEach(applicant => {
+        html += `
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                    <p style="font-weight: 600; margin-bottom: 0.3rem;">${applicant.name}</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">${applicant.position}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem;">
+                        ⭐ ${applicant.rating}
+                    </p>
+                    <button class="btn btn-success btn-small" onclick="reviewApplicant(${applicant.id})">
+                        Revisar
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('pending-applicants').innerHTML = html || '<p style="text-align: center; color: var(--text-secondary);">No hay aplicantes pendientes</p>';
+}
+
+function loadActiveInternships() {
+    const internships = [
+        {
+            id: 1,
+            student: 'Carlos González',
+            position: 'Frontend Developer',
+            start: '2024-08-01',
+            end: '2024-11-30',
+            hours: '145/180'
+        },
+        {
+            id: 2,
+            student: 'María López',
+            position: 'Backend Developer',
+            start: '2024-07-15',
+            end: '2024-11-15',
+            hours: '180/200'
+        },
+        {
+            id: 3,
+            student: 'Juan Pérez',
+            position: 'QA Engineer',
+            start: '2024-08-05',
+            end: '2024-12-05',
+            hours: '32/160'
+        }
+    ];
+
+    let html = '';
+    internships.forEach(internship => {
+        html += `
+            <tr>
+                <td>${internship.student}</td>
+                <td>${internship.position}</td>
+                <td>${new Date(internship.start).toLocaleDateString('es-ES')}</td>
+                <td>${new Date(internship.end).toLocaleDateString('es-ES')}</td>
+                <td><strong>${internship.hours}</strong></td>
+                <td class="table-actions">
+                    <a href="/company/internships/${internship.id}/" class="btn btn-primary btn-small">Ver</a>
+                    <a href="/company/internships/${internship.id}/evaluate/" class="btn btn-secondary btn-small">Evaluar</a>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('active-internships-table').innerHTML = html;
+}
+
+function reviewApplicant(applicantId) {
+    alert('Abriendo revisión del candidato ' + applicantId);
+    // Implementar modal de revisión
+}
+
+function exportReport() {
+    alert('Exportando reporte...');
+    // Implementar exportación a PDF/Excel
+}
+
+// Cargar datos al abrir la página
+document.addEventListener('DOMContentLoaded', loadCompanyDashboard);
+</script>
+{% endblock %}

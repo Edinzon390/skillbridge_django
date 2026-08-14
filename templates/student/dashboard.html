@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Estudiante | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-chart-line"></i> Bienvenido, {{ request.user.first_name }}
+    </h1>
+    <p style="color: var(--text-secondary);">Gestiona tu carrera profesional aquí</p>
+</div>
+
+<!-- ESTADÍSTICAS -->
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-briefcase"></i> Oportunidades Disponibles
+        </div>
+        <div class="stat-value" id="opportunities-count">0</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> Recientemente publicadas
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-paper-plane"></i> Aplicaciones Enviadas
+        </div>
+        <div class="stat-value" id="applications-count">0</div>
+        <div class="stat-change">
+            <span id="pending-applications">0</span> pendientes
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-check-circle"></i> Aceptadas
+        </div>
+        <div class="stat-value" id="accepted-count">0</div>
+        <div class="stat-change positive">
+            Esperando a iniciar
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-graduation-cap"></i> Pasantías Activas
+        </div>
+        <div class="stat-value" id="active-internships">0</div>
+        <div class="stat-change">
+            En progreso
+        </div>
+    </div>
+</div>
+
+<!-- SECCIONES PRINCIPALES -->
+<div class="grid grid-2">
+    <!-- OPORTUNIDADES RECIENTES -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-star"></i> Oportunidades Destacadas
+            </h2>
+            <a href="{% url 'frontend:internships' %}" class="btn btn-primary btn-small">Ver todas</a>
+        </div>
+        <div class="card-body" id="featured-opportunities">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading"></div>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando oportunidades...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIS APLICACIONES -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-inbox"></i> Mis Aplicaciones
+            </h2>
+            <a href="{% url 'frontend:my-applications' %}" class="btn btn-primary btn-small">Ver todas</a>
+        </div>
+        <div class="card-body" id="recent-applications">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading"></div>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando aplicaciones...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MIS PASANTÍAS ACTIVAS -->
+{% if active_internship %}
+<div class="card" style="margin-top: 2rem; border-left: 4px solid var(--success-color);">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-graduation-cap"></i> Pasantía Activa
+        </h2>
+        <span class="badge badge-success">En Progreso</span>
+    </div>
+    <div class="card-body">
+        <div class="grid grid-2" style="gap: 1rem;">
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Empresa</p>
+                <p style="font-weight: 600; font-size: 1.1rem;">{{ active_internship.opportunity.company.name }}</p>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Posición</p>
+                <p style="font-weight: 600; font-size: 1.1rem;">{{ active_internship.opportunity.position }}</p>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Inicio</p>
+                <p style="font-weight: 600;">{{ active_internship.start_date|date:"d/m/Y" }}</p>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Fin Esperado</p>
+                <p style="font-weight: 600;">{{ active_internship.end_date|date:"d/m/Y" }}</p>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Horas Registradas</p>
+                <p style="font-weight: 600; font-size: 1.1rem;">{{ active_internship.total_hours }}/{{ active_internship.opportunity.required_hours }}</p>
+            </div>
+            <div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.3rem;">Progreso</p>
+                <div style="background: var(--light-bg); border-radius: 0.5rem; height: 8px; overflow: hidden;">
+                    <div style="background: var(--success-color); height: 100%; width: {{ active_internship.progress }}%;"></div>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <a href="{% url 'frontend:view-internship' active_internship.id %}" class="btn btn-primary">
+                <i class="fas fa-eye"></i> Ver Detalles
+            </a>
+            <a href="{% url 'frontend:log-hours' active_internship.id %}" class="btn btn-secondary">
+                <i class="fas fa-clock"></i> Registrar Horas
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- PRÓXIMOS HITOS -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-calendar-alt"></i> Próximos Hitos
+        </h2>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Evento</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="milestones-list">
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 2rem;">
+                        <div class="loading"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cargar datos del dashboard
+async function loadDashboardData() {
+    try {
+        // Simular datos (reemplazar con API real)
+        const stats = {
+            opportunities: 12,
+            applications: 5,
+            accepted: 2,
+            active: 1,
+            pending: 3
+        };
+
+        document.getElementById('opportunities-count').textContent = stats.opportunities;
+        document.getElementById('applications-count').textContent = stats.applications;
+        document.getElementById('accepted-count').textContent = stats.accepted;
+        document.getElementById('active-internships').textContent = stats.active;
+        document.getElementById('pending-applications').textContent = stats.pending;
+
+        // Cargar oportunidades destacadas
+        loadFeaturedOpportunities();
+        loadRecentApplications();
+        loadMilestones();
+    } catch (error) {
+        console.error('Error cargando datos:', error);
+    }
+}
+
+function loadFeaturedOpportunities() {
+    const opportunities = [
+        {
+            id: 1,
+            position: 'Pasante de Desarrollo Frontend',
+            company: 'Tech Solutions Inc',
+            hours: 180,
+            deadline: '2024-09-30'
+        },
+        {
+            id: 2,
+            position: 'Pasante de Data Science',
+            company: 'Data Analytics Pro',
+            hours: 200,
+            deadline: '2024-10-15'
+        },
+        {
+            id: 3,
+            position: 'Pasante de Backend',
+            company: 'CloudTech',
+            hours: 160,
+            deadline: '2024-09-25'
+        }
+    ];
+
+    let html = '';
+    opportunities.forEach(opp => {
+        html += `
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                    <div>
+                        <p style="font-weight: 600; margin-bottom: 0.3rem;">${opp.position}</p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">${opp.company}</p>
+                    </div>
+                    <span class="badge badge-primary">${opp.hours}h</span>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.8rem;">
+                    Límite: ${new Date(opp.deadline).toLocaleDateString('es-ES')}
+                </p>
+                <a href="/student/opportunities/${opp.id}/" class="btn btn-primary btn-small">Aplicar</a>
+            </div>
+        `;
+    });
+
+    document.getElementById('featured-opportunities').innerHTML = html || '<p style="text-align: center; color: var(--text-secondary);">No hay oportunidades disponibles</p>';
+}
+
+function loadRecentApplications() {
+    const applications = [
+        {
+            id: 1,
+            position: 'Pasante Frontend',
+            company: 'Tech Solutions',
+            status: 'pending',
+            date: '2024-08-10'
+        },
+        {
+            id: 2,
+            position: 'Pasante Backend',
+            company: 'CloudTech',
+            status: 'accepted',
+            date: '2024-08-08'
+        },
+        {
+            id: 3,
+            position: 'Pasante QA',
+            company: 'Quality First',
+            status: 'rejected',
+            date: '2024-08-05'
+        }
+    ];
+
+    let html = '';
+    applications.forEach(app => {
+        const statusBadge = {
+            'pending': 'badge-warning',
+            'accepted': 'badge-success',
+            'rejected': 'badge-danger'
+        };
+        const statusText = {
+            'pending': 'Pendiente',
+            'accepted': 'Aceptada',
+            'rejected': 'Rechazada'
+        };
+
+        html += `
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="font-weight: 600; margin-bottom: 0.3rem;">${app.position}</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">${app.company}</p>
+                </div>
+                <span class="badge ${statusBadge[app.status]}">${statusText[app.status]}</span>
+            </div>
+        `;
+    });
+
+    document.getElementById('recent-applications').innerHTML = html || '<p style="text-align: center; color: var(--text-secondary);">No hay aplicaciones aún</p>';
+}
+
+function loadMilestones() {
+    const milestones = [
+        { event: 'Límite de aplicación - Tech Solutions', date: '2024-09-30' },
+        { event: 'Inicio de pasantía - CloudTech', date: '2024-09-15' },
+        { event: 'Evaluación intermedia', date: '2024-10-15' },
+        { event: 'Fin de pasantía', date: '2024-12-15' }
+    ];
+
+    let html = '';
+    milestones.forEach(milestone => {
+        const dateObj = new Date(milestone.date);
+        const isUpcoming = dateObj > new Date();
+        
+        html += `
+            <tr>
+                <td>${milestone.event}</td>
+                <td>${dateObj.toLocaleDateString('es-ES')}</td>
+                <td>
+                    <span class="badge ${isUpcoming ? 'badge-warning' : 'badge-success'}">
+                        ${isUpcoming ? 'Por venir' : 'Completado'}
+                    </span>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('milestones-list').innerHTML = html;
+}
+
+// Cargar datos al abrir la página
+document.addEventListener('DOMContentLoaded', loadDashboardData);
+</script>
+{% endblock %}

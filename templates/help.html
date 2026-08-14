@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Ayuda - SkillBridge{% endblock %}
+
+{% block public_content %}
+<div class="auth-container" style="min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 2rem;">
+    <div class="card" style="max-width: 780px; width: 100%;">
+        <div class="card-header">
+            <h1 class="card-title"><i class="fas fa-circle-question"></i> Centro de ayuda</h1>
+            <p class="card-subtitle">Todo lo que necesitas saber para usar SkillBridge.</p>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <h3 style="margin-bottom: 0.75rem;">¿Cómo comenzar?</h3>
+                <p>Inicia sesión con las credenciales de prueba, navega por el panel y explora las secciones de estudiante, empresa o administración.</p>
+            </div>
+            <div class="form-group">
+                <h3 style="margin-bottom: 0.75rem;">Soporte</h3>
+                <p>Si tienes problemas con la plataforma, revisa la documentación del proyecto o contacta al equipo de soporte.</p>
+            </div>
+            <a href="{% url 'frontend:login' %}" class="btn btn-primary">Ir al inicio de sesión</a>
+
+            <!-- Chatbot widget trigger -->
+            <div id="chatbot-widget" aria-hidden="false"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

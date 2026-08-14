@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión - SkillBridge{% endblock %}
+
+{% block public_content %}
+<div class="auth-container" style="min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);">
+    <div class="card" style="max-width: 400px; width: 90%;">
+        <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+            <div style="text-align: center; width: 100%;">
+                <h1 class="card-title" style="margin-bottom: 0.5rem;">
+                    <i class="fas fa-graduation-cap"></i> SkillBridge
+                </h1>
+                <p class="card-subtitle">Plataforma de Gestión de Pasantías</p>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding-top: 2rem;">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <span>{{ message }}</span>
+                <span class="alert-close" onclick="this.parentElement.style.display='none';">×</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" class="form-group">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user"></i> Usuario o Email
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input"
+                        placeholder="Ingresa tu usuario o email"
+                        required
+                        autofocus
+                    >
+                    {% if form.username.errors %}
+                    <div class="form-error">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i> Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="Ingresa tu contraseña"
+                        required
+                    >
+                    {% if form.password.errors %}
+                    <div class="form-error">{{ form.password.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 400;">
+                        <input type="checkbox" name="remember" id="remember">
+                        Recuérdame
+                    </label>
+                    <a href="{% url 'frontend:password-reset' %}" style="color: var(--primary-color); text-decoration: none;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    ¿No tienes cuenta? <a href="{% url 'frontend:register' %}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Regístrate aquí</a>
+                </p>
+            </div>
+
+            <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; font-size: 0.85rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    <strong>Credenciales de prueba:</strong>
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 1rem;">
+                    <li>Estudiante: <code>student@example.com</code></li>
+                    <li>Empresa: <code>company@example.com</code></li>
+                    <li>Admin: <code>admin@example.com</code></li>
+                    <li>Contraseña: <code>Demo@123</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    code {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.3rem;
+        font-family: 'Courier New', monospace;
+    }
+</style>
+{% endblock %}

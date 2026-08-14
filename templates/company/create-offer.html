@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nueva Oferta | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-plus-circle"></i> Crear Nueva Oferta
+    </h1>
+    <p style="color: var(--text-secondary);">Publica una nueva oportunidad de pasantía para estudiantes</p>
+</div>
+
+<div style="max-width: 900px;">
+    <form id="create-offer-form" class="card" method="post">
+        {% csrf_token %}
+        
+        <!-- INFORMACIÓN BÁSICA -->
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-info-circle"></i> Información Básica
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <div class="form-group">
+                <label for="position" class="form-label">
+                    Posición <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="position" 
+                    name="position" 
+                    class="form-input"
+                    placeholder="Ej: Pasante de Desarrollo Frontend"
+                                    value="{{ offer.title|default:'' }}"
+                                    required
+                                >
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    Descripción <span class="required">*</span>
+                </label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-textarea"
+                    placeholder="Describe en detalle las responsabilidades y tareas del pasante..."
+                    required
+                                >{{ offer.description|default:'' }}</textarea>
+                <div class="form-help">Mínimo 100 caracteres</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="location" class="form-label">
+                        Ubicación <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="location" 
+                        name="location" 
+                        class="form-input"
+                        placeholder="Ej: Bogotá, Colombia"
+                                            value="{{ offer.location|default:'' }}"
+                                            required
+                                        >
+                </div>
+
+                <div class="form-group">
+                    <label for="location_type" class="form-label">
+                        Tipo de Ubicación <span class="required">*</span>
+                    </label>
+                    <select id="location_type" name="location_type" class="form-select" required>
+                        <option value="">Selecciona...</option>
+                                            <option value="on-site" {% if offer.location_type == 'on-site' %}selected{% endif %}>Presencial</option>
+                                            <option value="remote" {% if offer.location_type == 'remote' %}selected{% endif %}>Remoto</option>
+                                            <option value="hybrid" {% if offer.location_type == 'hybrid' %}selected{% endif %}>Híbrido</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area" class="form-label">
+                        Área <span class="required">*</span>
+                    </label>
+                    <select id="area" name="area" class="form-select" required>
+                        <option value="">Selecciona...</option>
+                                            <option value="frontend" {% if offer.area == 'frontend' %}selected{% endif %}>Frontend</option>
+                                            <option value="backend" {% if offer.area == 'backend' %}selected{% endif %}>Backend</option>
+                                            <option value="fullstack" {% if offer.area == 'fullstack' %}selected{% endif %}>Full Stack</option>
+                                            <option value="devops" {% if offer.area == 'devops' %}selected{% endif %}>DevOps</option>
+                                            <option value="qa" {% if offer.area == 'qa' %}selected{% endif %}>QA</option>
+                                            <option value="datascience" {% if offer.area == 'datascience' %}selected{% endif %}>Data Science</option>
+                                            <option value="mobile" {% if offer.area == 'mobile' %}selected{% endif %}>Mobile</option>
+                                            <option value="other" {% if offer.area == 'other' %}selected{% endif %}>Otra</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="required_hours" class="form-label">
+                        Horas Requeridas <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="number" 
+                        id="required_hours" 
+                        name="required_hours" 
+                        class="form-input"
+                        placeholder="160, 180, 200, etc."
+                                            value="{{ offer.required_hours|default:'' }}"
+                                            min="160"
+                                            max="500"
+                                            step="10"
+                                            required
+                                        >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="deadline" class="form-label">
+                    Fecha Límite de Aplicación <span class="required">*</span>
+                </label>
+                <input 
+                    type="date" 
+                    id="deadline" 
+                    name="deadline" 
+                    class="form-input"
+                                    value="{{ offer.deadline|date:'Y-m-d'|default:'' }}"
+                                    required
+                                >
+                <div class="form-help">Cuando ya no se aceptarán aplicaciones</div>
+            </div>
+        </div>
+
+        <!-- HABILIDADES REQUERIDAS -->
+        <div class="card-header" style="margin-top: 2rem;">
+            <h2 class="card-title">
+                <i class="fas fa-code"></i> Habilidades Requeridas
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <div class="form-group">
+                <label for="required_skills" class="form-label">
+                    Habilidades <span class="required">*</span>
+                </label>
+                <textarea 
+                    id="required_skills" 
+                    name="required_skills" 
+                    class="form-textarea"
+                    placeholder="Ingresa las habilidades separadas por comas&#10;Ej: HTML, CSS, JavaScript, React, Git"
+                    required
+                ></textarea>
+                <div class="form-help">Ingresa cada habilidad separada por coma</div>
+            </div>
+
+            <div class="form-group">
+                <label for="nice_to_have" class="form-label">
+                    Habilidades Preferibles (No requeridas)
+                </label>
+                <textarea 
+                    id="nice_to_have" 
+                    name="nice_to_have" 
+                    class="form-textarea"
+                    placeholder="Habilidades adicionales que son un plus&#10;Ej: TypeScript, Next.js, Testing"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- BENEFICIOS -->
+        <div class="card-header" style="margin-top: 2rem;">
+            <h2 class="card-title">
+                <i class="fas fa-gift"></i> Beneficios
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <div class="form-group">
+                <label for="benefits" class="form-label">
+                    Beneficios Ofrecidos
+                </label>
+                <textarea 
+                    id="benefits" 
+                    name="benefits" 
+                    class="form-textarea"
+                    placeholder="Ej: Mentoring, Certificado, Posibilidad de contratación, etc."
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 400;">
+                    <input type="checkbox" id="is_paid" name="is_paid">
+                    <span>Esta pasantía es remunerada</span>
+                </label>
+            </div>
+
+            <div class="form-row" id="salary-row" style="display: none;">
+                <div class="form-group">
+                    <label for="salary_min" class="form-label">
+                        Salario Mínimo (COP)
+                    </label>
+                    <input 
+                        type="number" 
+                        id="salary_min" 
+                        name="salary_min" 
+                        class="form-input"
+                        placeholder="500000"
+                        step="10000"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="salary_max" class="form-label">
+                        Salario Máximo (COP)
+                    </label>
+                    <input 
+                        type="number" 
+                        id="salary_max" 
+                        name="salary_max" 
+                        class="form-input"
+                        placeholder="1000000"
+                        step="10000"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- SUPERVISOR -->
+        <div class="card-header" style="margin-top: 2rem;">
+            <h2 class="card-title">
+                <i class="fas fa-user-tie"></i> Supervisor de Pasantía
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="supervisor_name" class="form-label">
+                        Nombre del Supervisor <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="supervisor_name" 
+                        name="supervisor_name" 
+                        class="form-input"
+                        placeholder="Ej: Carlos González"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="supervisor_email" class="form-label">
+                        Email del Supervisor <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="supervisor_email" 
+                        name="supervisor_email" 
+                        class="form-input"
+                        placeholder="supervisor@empresa.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="supervisor_phone" class="form-label">
+                        Teléfono del Supervisor
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="supervisor_phone" 
+                        name="supervisor_phone" 
+                        class="form-input"
+                        placeholder="+57 300 123 4567"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTACTO ADICIONAL -->
+        <div class="card-header" style="margin-top: 2rem;">
+            <h2 class="card-title">
+                <i class="fas fa-envelope"></i> Información de Contacto
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <div class="form-group">
+                <label for="contact_email" class="form-label">
+                    Email de Contacto <span class="required">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="contact_email" 
+                    name="contact_email" 
+                    class="form-input"
+                    placeholder="contacto@empresa.com"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="contact_phone" class="form-label">
+                    Teléfono de Contacto
+                </label>
+                <input 
+                    type="tel" 
+                    id="contact_phone" 
+                    name="contact_phone" 
+                    class="form-input"
+                    placeholder="+57 300 123 4567"
+                >
+            </div>
+        </div>
+
+        <!-- ACCIONES -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="button" class="btn btn-outline" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </button>
+            <button type="reset" class="btn btn-outline">
+                <i class="fas fa-redo"></i> Limpiar
+            </button>
+            <button type="submit" class="btn btn-primary" style="margin-left: auto;">
+                <i class="fas fa-check"></i> Publicar Oferta
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Mostrar campo de salario cuando sea pagado
+document.getElementById('is_paid').addEventListener('change', function() {
+    document.getElementById('salary-row').style.display = this.checked ? 'grid' : 'none';
+});
+
+// Validación ligera: dejar que el formulario se envíe como POST al servidor
+// (El submit se realiza de forma tradicional para crear la oferta desde el perfil de la empresa)
+document.getElementById('create-offer-form').addEventListener('submit', (e) => {
+    // Puedes agregar validaciones adicionales aquí si lo deseas
+    const required = ['position', 'description', 'location', 'location_type', 'area', 'required_hours', 'deadline', 'required_skills', 'supervisor_name', 'supervisor_email', 'contact_email'];
+    let ok = true;
+    required.forEach(name => {
+        const el = document.querySelector(`[name="${name}"]`);
+        if (el && !el.value.trim()) {
+            el.style.borderColor = 'var(--danger-color)';
+            ok = false;
+        }
+    });
+    if (!ok) {
+        e.preventDefault();
+        alert('Por favor completa los campos obligatorios.');
+    }
+});
+
+// Validar fecha mínima
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('deadline').setAttribute('min', today);
+</script>
+
+<style>
+.required {
+    color: var(--danger-color);
+    margin-left: 0.2rem;
+}
+</style>
+{% endblock %}

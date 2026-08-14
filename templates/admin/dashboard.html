@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrativo | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-tachometer-alt"></i> Panel Administrativo
+    </h1>
+    <p style="color: var(--text-secondary);">Monitoreo integral del sistema de pasantías</p>
+</div>
+
+<!-- FILTROS -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="form-row">
+        <div class="form-group" style="margin-bottom: 0;">
+            <input type="text" class="form-input" placeholder="Buscar estudiante, empresa o pasantía...">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <select class="form-select">
+                <option>Todos los estados</option>
+                <option>En progreso</option>
+                <option>Completadas</option>
+                <option>Canceladas</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <select class="form-select">
+                <option>Últimos 30 días</option>
+                <option>Últimos 60 días</option>
+                <option>Últimos 90 días</option>
+                <option>Todo el tiempo</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" style="align-self: flex-end;">
+            <i class="fas fa-search"></i> Filtrar
+        </button>
+    </div>
+</div>
+
+<!-- ESTADÍSTICAS PRINCIPALES -->
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-graduation-cap"></i> Estudiantes Activos
+        </div>
+        <div class="stat-value" id="active-students">0</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> +15% este mes
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-building"></i> Empresas Validadas
+        </div>
+        <div class="stat-value" id="validated-companies">0</div>
+        <div class="stat-change">
+            <span id="pending-companies">0</span> por validar
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-briefcase"></i> Pasantías Totales
+        </div>
+        <div class="stat-value" id="total-internships">0</div>
+        <div class="stat-change">
+            <span id="active-internships-count">0</span> activas
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="fas fa-check-circle"></i> Tasa Completación
+        </div>
+        <div class="stat-value" id="completion-rate">0%</div>
+        <div class="stat-change positive">
+            Meta: 85%
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICOS Y ANÁLISIS -->
+<div class="grid grid-2" style="margin-bottom: 2rem;">
+    <!-- PASANTÍAS POR ESTADO -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-chart-pie"></i> Pasantías por Estado
+            </h2>
+        </div>
+        <div class="card-body">
+            <div id="internships-chart" style="height: 250px;">
+                <canvas id="chart-internships"></canvas>
+            </div>
+            <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>En Progreso</span>
+                    <strong style="color: var(--primary-color);">45</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Completadas</span>
+                    <strong style="color: var(--success-color);">32</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Pendientes</span>
+                    <strong style="color: var(--warning-color);">12</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Canceladas</span>
+                    <strong style="color: var(--danger-color);">3</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVIDAD RECIENTE -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-clock"></i> Actividad Reciente
+            </h2>
+        </div>
+        <div class="card-body" id="recent-activity">
+            <div style="text-align: center; padding: 2rem;">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLA DE MONITOREO DE PASANTÍAS -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-list"></i> Monitoreo de Pasantías
+        </h2>
+        <a href="{% url 'frontend:export-report' %}" class="btn btn-secondary btn-small">
+            <i class="fas fa-download"></i> Exportar
+        </a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Empresa</th>
+                    <th>Posición</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Horas</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="internships-table">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem;">
+                        <div class="loading"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ALERTAS Y REQUISITOS PENDIENTES -->
+<div class="grid grid-2">
+    <!-- ALERTAS -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-exclamation-triangle"></i> Alertas
+            </h2>
+        </div>
+        <div class="card-body" id="alerts">
+            <div class="alert alert-warning">
+                <span><strong>Atención:</strong> 5 estudiantes sin horas registradas en la última semana</span>
+                <span class="alert-close" onclick="this.parentElement.style.display='none';">×</span>
+            </div>
+            <div class="alert alert-danger">
+                <span><strong>Crítico:</strong> 2 pasantías en riesgo de no completar horas requeridas</span>
+                <span class="alert-close" onclick="this.parentElement.style.display='none';">×</span>
+            </div>
+            <div class="alert alert-info">
+                <span><strong>Información:</strong> 3 empresas nuevas requieren validación</span>
+                <span class="alert-close" onclick="this.parentElement.style.display='none';">×</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAREAS PENDIENTES -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-tasks"></i> Tareas Pendientes
+            </h2>
+        </div>
+        <div class="card-body" id="pending-tasks">
+            <div style="display: flex; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                <input type="checkbox" style="margin-right: 0.75rem;">
+                <span style="flex: 1;">Validar 3 empresas nuevas</span>
+                <span class="badge badge-warning">Urgente</span>
+            </div>
+            <div style="display: flex; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                <input type="checkbox" style="margin-right: 0.75rem;">
+                <span style="flex: 1;">Revisar reportes de evaluación pendientes</span>
+                <span class="badge badge-warning">Hoy</span>
+            </div>
+            <div style="display: flex; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                <input type="checkbox" style="margin-right: 0.75rem;">
+                <span style="flex: 1;">Contactar estudiantes en riesgo</span>
+                <span class="badge badge-danger">Vencido</span>
+            </div>
+            <div style="display: flex; align-items: center; padding: 0.75rem;">
+                <input type="checkbox" style="margin-right: 0.75rem;">
+                <span style="flex: 1;">Generar reporte mensual</span>
+                <span class="badge badge-success">Completado</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- USUARIOS Y PERMISOS -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h2 class="card-title">
+            <i class="fas fa-users"></i> Gestión de Usuarios
+        </h2>
+        <a href="{% url 'frontend:users-management' %}" class="btn btn-primary btn-small">
+            <i class="fas fa-plus"></i> Nuevo Usuario
+        </a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Institución</th>
+                    <th>Último Acceso</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="users-table">
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 2rem;">
+                        <div class="loading"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadAdminDashboard() {
+    try {
+        // Cargar estadísticas
+        const stats = {
+            activeStudents: 156,
+            validatedCompanies: 24,
+            pendingCompanies: 3,
+            totalInternships: 92,
+            activeInternships: 45,
+            completionRate: 78
+        };
+
+        document.getElementById('active-students').textContent = stats.activeStudents;
+        document.getElementById('validated-companies').textContent = stats.validatedCompanies;
+        document.getElementById('pending-companies').textContent = stats.pendingCompanies;
+        document.getElementById('total-internships').textContent = stats.totalInternships;
+        document.getElementById('active-internships-count').textContent = stats.activeInternships;
+        document.getElementById('completion-rate').textContent = stats.completionRate + '%';
+
+        // Cargar datos
+        loadRecentActivity();
+        loadInternshipsTable();
+        loadUsersTable();
+    } catch (error) {
+        console.error('Error cargando dashboard:', error);
+    }
+}
+
+function loadRecentActivity() {
+    const activities = [
+        {
+            type: 'application',
+            description: 'Nueva aplicación de Carlos González',
+            time: 'Hace 2 horas',
+            icon: '📝'
+        },
+        {
+            type: 'approval',
+            description: 'Pasantía aprobada para María López',
+            time: 'Hace 4 horas',
+            icon: '✅'
+        },
+        {
+            type: 'company',
+            description: 'Tech Solutions solicitó validación',
+            time: 'Hace 6 horas',
+            icon: '🏢'
+        },
+        {
+            type: 'completion',
+            description: 'Juan Pérez completó su pasantía',
+            time: 'Hace 1 día',
+            icon: '🎓'
+        },
+        {
+            type: 'alert',
+            description: 'Alerta: 3 pasantías próximas a vencer',
+            time: 'Hace 1 día',
+            icon: '⚠️'
+        }
+    ];
+
+    let html = '';
+    activities.forEach(activity => {
+        html += `
+            <div style="display: flex; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                <span style="font-size: 1.5rem;">${activity.icon}</span>
+                <div style="flex: 1;">
+                    <p style="font-weight: 600; margin-bottom: 0.2rem;">${activity.description}</p>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">${activity.time}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('recent-activity').innerHTML = html;
+}
+
+function loadInternshipsTable() {
+    const internships = [
+        {
+            id: 1,
+            student: 'Carlos González',
+            company: 'Tech Solutions',
+            position: 'Frontend Developer',
+            start: '2024-08-01',
+            end: '2024-11-30',
+            hours: '145/180',
+            status: 'in_progress'
+        },
+        {
+            id: 2,
+            student: 'María López',
+            company: 'CloudTech',
+            position: 'Backend Developer',
+            start: '2024-07-15',
+            end: '2024-11-15',
+            hours: '180/200',
+            status: 'in_progress'
+        },
+        {
+            id: 3,
+            student: 'Juan Pérez',
+            company: 'Data Analytics',
+            position: 'Data Scientist',
+            start: '2024-06-01',
+            end: '2024-09-30',
+            hours: '200/200',
+            status: 'completed'
+        },
+        {
+            id: 4,
+            student: 'Laura Martínez',
+            company: 'Quality First',
+            position: 'QA Engineer',
+            start: '2024-08-10',
+            end: '2024-12-10',
+            hours: '32/160',
+            status: 'pending'
+        }
+    ];
+
+    let html = '';
+    const statusBadges = {
+        'in_progress': 'badge-primary',
+        'completed': 'badge-success',
+        'pending': 'badge-warning',
+        'cancelled': 'badge-danger'
+    };
+    const statusText = {
+        'in_progress': 'En Progreso',
+        'completed': 'Completada',
+        'pending': 'Pendiente',
+        'cancelled': 'Cancelada'
+    };
+
+    internships.forEach(internship => {
+        html += `
+            <tr>
+                <td>${internship.student}</td>
+                <td>${internship.company}</td>
+                <td>${internship.position}</td>
+                <td>${new Date(internship.start).toLocaleDateString('es-ES')}</td>
+                <td>${new Date(internship.end).toLocaleDateString('es-ES')}</td>
+                <td><strong>${internship.hours}</strong></td>
+                <td>
+                    <span class="badge ${statusBadges[internship.status]}">
+                        ${statusText[internship.status]}
+                    </span>
+                </td>
+                <td class="table-actions">
+                    <a href="/admin/internships/${internship.id}/" class="btn btn-primary btn-small">Ver</a>
+                    <button class="btn btn-outline btn-small" onclick="editInternship(${internship.id})">Editar</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('internships-table').innerHTML = html;
+}
+
+function loadUsersTable() {
+    const users = [
+        {
+            id: 1,
+            name: 'Adrián García',
+            email: 'adrian@institution.edu',
+            role: 'Coordinador',
+            institution: 'Universidad Central',
+            lastAccess: '2024-08-10 14:30',
+            status: 'active'
+        },
+        {
+            id: 2,
+            name: 'Sofía López',
+            email: 'sofia@institution.edu',
+            role: 'Tutor',
+            institution: 'Universidad Central',
+            lastAccess: '2024-08-09 10:15',
+            status: 'active'
+        },
+        {
+            id: 3,
+            name: 'Roberto Pérez',
+            email: 'roberto@system.admin',
+            role: 'Super Admin',
+            institution: 'Sistema Central',
+            lastAccess: '2024-08-10 09:00',
+            status: 'active'
+        },
+        {
+            id: 4,
+            name: 'Camila Torres',
+            email: 'camila@institution.edu',
+            role: 'Coordinador',
+            institution: 'Universidad del Norte',
+            lastAccess: '2024-08-01 16:45',
+            status: 'inactive'
+        }
+    ];
+
+    let html = '';
+    users.forEach(user => {
+        const statusBadge = user.status === 'active' ? 'badge-success' : 'badge-warning';
+        const statusText = user.status === 'active' ? 'Activo' : 'Inactivo';
+
+        html += `
+            <tr>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td><span class="badge badge-primary">${user.role}</span></td>
+                <td>${user.institution}</td>
+                <td>${user.lastAccess}</td>
+                <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                <td class="table-actions">
+                    <button class="btn btn-primary btn-small" onclick="editUser(${user.id})">Editar</button>
+                    <button class="btn btn-outline btn-small" onclick="resetPassword(${user.id})">Reset</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('users-table').innerHTML = html;
+}
+
+function editInternship(id) {
+    alert('Editando pasantía ' + id);
+    // Implementar modal de edición
+}
+
+function editUser(id) {
+    alert('Editando usuario ' + id);
+    // Implementar modal de edición
+}
+
+function resetPassword(id) {
+    if (confirm('¿Enviar link de reseteo de contraseña a este usuario?')) {
+        alert('Link enviado exitosamente');
+    }
+}
+
+// Cargar datos al abrir la página
+document.addEventListener('DOMContentLoaded', loadAdminDashboard);
+</script>
+{% endblock %}

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge - Plataforma de Gestión de Pasantías</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            max-width: 600px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .btn-white {
+            background: white;
+            color: var(--primary-color);
+            padding: 1rem 2.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-white:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .features {
+            padding: 5rem 2rem;
+            background: white;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .stats {
+            background: var(--light-bg);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .stat-box {
+            padding: 2rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .navbar-landing {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .navbar-landing-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .navbar-brand-landing {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .navbar-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .navbar-links a:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar-landing">
+        <div class="navbar-landing-content">
+            <a href="/" class="navbar-brand-landing">
+                <i class="fas fa-graduation-cap"></i> SkillBridge
+            </a>
+            <div class="navbar-links">
+                <a href="#features">Características</a>
+                <a href="#stats">Resultados</a>
+                <a href="{% url 'frontend:login' %}" class="btn btn-primary btn-small">Iniciar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <h1>
+            <i class="fas fa-graduation-cap"></i><br>
+            Conecta Talento con Oportunidades
+        </h1>
+        <p>La plataforma integral para gestionar pasantías técnicas entre instituciones educativas y empresas</p>
+        <div class="hero-buttons">
+            <a href="{% url 'frontend:register' %}" class="btn-white">
+                <i class="fas fa-user-plus"></i> Regístrate Ahora
+            </a>
+            <a href="{% url 'frontend:login' %}" class="btn-white" style="background: rgba(255,255,255,0.2); border: 2px solid white;">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </a>
+        </div>
+        <div style="margin-top: 2rem; font-size: 2rem;">
+            <i class="fas fa-arrow-down"></i>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+        <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem;">
+            ¿Qué es SkillBridge?
+        </h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <h3>Para Estudiantes</h3>
+                <p>Encuentra oportunidades de pasantía, postúlate fácilmente, registra tus horas de trabajo y recibe evaluaciones de tu desempeño.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏢</div>
+                <h3>Para Empresas</h3>
+                <p>Publica ofertas de pasantía, gestiona aplicaciones, supervisa el desempeño de estudiantes y valida las horas trabajadas.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👨‍💼</div>
+                <h3>Para Coordinadores</h3>
+                <p>Monitorea todas las pasantías, valida empresas, genera reportes y asegura el cumplimiento de estándares educativos.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Dashboard Inteligente</h3>
+                <p>Panel de control personalizado con estadísticas, notificaciones en tiempo real y acceso a herramientas de gestión.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Seguro y Confiable</h3>
+                <p>Autenticación segura, datos encriptados y cumplimiento con regulaciones de protección de datos.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Acceso Móvil</h3>
+                <p>Interfaz responsiva que funciona perfectamente en computadoras, tablets y dispositivos móviles.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" id="stats">
+        <h2 style="font-size: 2.5rem; margin-bottom: 3rem;">Impacto de SkillBridge</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number">156+</div>
+                <div class="stat-label">Estudiantes Activos</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">24+</div>
+                <div class="stat-label">Empresas Verificadas</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">92+</div>
+                <div class="stat-label">Pasantías Completadas</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">85%</div>
+                <div class="stat-label">Tasa de Satisfacción</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2>¿Listo para comenzar?</h2>
+        <p>Únete a cientos de estudiantes y empresas que confían en SkillBridge</p>
+        <a href="{% url 'frontend:register' %}" class="btn-white">
+            <i class="fas fa-rocket"></i> Comienza Ahora
+        </a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer style="background: var(--text-primary); color: white; padding: 3rem 2rem; text-align: center;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="margin-bottom: 2rem;">
+                <h3>SkillBridge</h3>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 0.5rem;">Conectando talento joven con oportunidades empresariales</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem; text-align: left;">
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Para Estudiantes</h4>
+                    <ul style="list-style: none;">
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Buscar Oportunidades</a></li>
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Mi Dashboard</a></li>
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Mis Aplicaciones</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Para Empresas</h4>
+                    <ul style="list-style: none;">
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Publicar Oferta</a></li>
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Gestionar Pasantías</a></li>
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Reportes</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Información</h4>
+                    <ul style="list-style: none;">
+                        <li><a href="{% url 'frontend:help' %}" style="color: rgba(255,255,255,0.7); text-decoration: none;">Ayuda</a></li>
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Privacidad</a></li>
+                        <li><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none;">Términos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+                <p style="color: rgba(255,255,255,0.7);">© 2024 SkillBridge. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
