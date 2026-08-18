@@ -1,9 +1,15 @@
 /* Estilos base recreados - color de texto negro y contraste mejorado */
 :root{
  --bg-color: #0b1118;
- --text-color: #e6eef8; /* claro sobre fondo oscuro */
+ --text-color: #5a9dee; /* claro sobre fondo oscuro */
  --muted-color: #9fb3d6;
  --primary-color: #1e90ff; /* azul brillante */
+ --primary-color-dark: #0b61a7; /* azul más oscuro para enlaces (mejor contraste) */
+ --secondary-color: #06223a; /* complemento para gradientes */
+ --text-primary: #0b1220; /* color oscuro para secciones claras (landing) */
+ --text-secondary: #61738b; /* color secundario legible sobre fondo claro y oscuro */
+ --light-bg: #f6f8fb; /* usados en secciones claras */
+ --success-color: #28a745;
  --border-color: #1f2a35;
  --sidebar-bg: #0b1220;
  --card-bg: #0f1724;
@@ -126,7 +132,11 @@ input,select,textarea,button{ font-family:inherit }
 
 /* Landing navbar variations */
 .navbar-landing{ background:transparent; padding:1rem }
-.navbar-landing .navbar-links a{ margin-left:0.6rem }
+.navbar-landing .navbar-links a{ margin-left:0.6rem; color: var(--primary-color-dark); font-weight:600 }
+.navbar-landing .navbar-links a:hover{ color: #084f86; }
+/* Features section on landing: ensure readable text when background is white */
+.features{ color: var(--text-primary); }
+.features .feature-card p{ color: var(--text-secondary); }
 
 /* Loading */
 .loading{ height:36px; background:linear-gradient(90deg,#f0f0f0,#e9e9e9); border-radius:4px }

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Pasantías{% endblock %}
+
+{% block content %}
+<h1>Mis Pasantías</h1>
+
+{% if internships and internships|length > 0 %}
+  <ul class="internships-list">
+    {% for intern in internships %}
+      <li class="card mb-2">
+        <div class="card-body">
+          <p style="font-weight:600">{{ intern.company.name }}</p>
+          <p class="text-muted">Supervisor: {{ intern.supervisor.full_name if intern.supervisor }}</p>
+          <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
+          <p><strong>Horas:</strong> {{ intern.total_hours }}</p>
+          <p class="table-actions">
+            <a class="btn btn-small btn-outline" href="{% url 'frontend:student-internship-detail' intern.id %}">Ver</a>
+          </p>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No tienes pasantías registradas.</p>
+{% endif %}
+
+{% endblock %}

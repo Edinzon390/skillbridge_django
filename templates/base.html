@@ -39,10 +39,14 @@
             <div class="navbar-user">
                 <button id="theme-toggle" class="btn btn-outline btn-small" title="Cambiar tema">☀️</button>
                 {% if request.user.is_authenticated %}
-                    <div class="user-avatar" title="{{ request.user.get_full_name }}">
-                        {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                    <div class="user-avatar" title="{% if request.user.company %}{{ request.user.company.name }}{% else %}{{ request.user.get_full_name }}{% endif %}">
+                        {% if request.user.company %}
+                            {{ request.user.company.name|first|upper }}
+                        {% else %}
+                            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                        {% endif %}
                     </div>
-                    <span>{{ request.user.first_name|default:request.user.username }}</span>
+                    <span>{% if request.user.company %}{{ request.user.company.name }}{% else %}{{ request.user.first_name|default:request.user.username }}{% endif %}</span>
                     <a href="{% url 'frontend:logout' %}" class="logout-btn">Salir</a>
                 {% else %}
                     <a href="{% url 'frontend:login' %}" class="logout-btn">Iniciar Sesión</a>

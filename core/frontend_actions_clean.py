@@ -66,6 +66,55 @@ def register_submit(request):
     return render(request, 'auth/register.html')
 
 
+def register_submit_v2(request):
+    """Improved register handler that accepts full_name for students and uses company name for company users."""
+    if request.user.is_authenticated:
+        return redirect(get_dashboard_redirect_url(request.user))
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '').strip()
+        selected_role = request.POST.get('role', '').strip().lower()
+        company_name = request.POST.get('company_name', '').strip()
+        full_name = request.POST.get('full_name', '').strip()
+
+        if not email or not password:
+            messages.error(request, 'El correo y la contraseña son obligatorios.')
+            return render(request, 'auth/register.html')
+
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base_username}{counter}'
+            counter += 1
+
+        role = Role.COMPANY if selected_role == 'company' else Role.STUDENT
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.role = role
+
+        if role == Role.COMPANY:
+            if company_name:
+                company, created = Company.objects.get_or_create(name=company_name)
+                if created:
+                    company.is_active = True
+                    company.save()
+                user.company = company
+                user.first_name = company.name
+        else:
+            if full_name:
+                parts = full_name.split()
+                user.first_name = parts[0]
+                user.last_name = ' '.join(parts[1:]) if len(parts) > 1 else ''
+
+        user.save()
+        login(request, user)
+        messages.success(request, 'Cuenta creada correctamente.')
+        return redirect(get_dashboard_redirect_url(user))
+
+    return render(request, 'auth/register.html')
+
+
 @login_required(login_url='frontend:login')
 def create_offer_view(request):
     if request.method == 'POST':
@@ -261,3 +310,136 @@ def company_offers_json(request):
             'status': opp.status,
         })
     return JsonResponse({'offers': offers})
+
+
+from django.db.models import Avg
+from internships.models import Application, Internship
+
+@login_required(login_url='frontend:login')
+def company_dashboard_json(request):
+    """Return aggregate dashboard statistics for the logged-in company."""
+    user = request.user
+    company = getattr(user, 'company', None)
+    if not company:
+        return JsonResponse({'ok': True, 'activeOffers': 0, 'totalApplicants': 0, 'pendingReview': 0, 'activeInternships': 0, 'avgRating': 0})
+
+    active_offers = Opportunity.objects.filter(company=company, status=Opportunity.Status.ACTIVE).count()
+    total_applicants = Application.objects.filter(opportunity__company=company).count()
+    pending_review = Application.objects.filter(opportunity__company=company, status__in=[Application.Status.SENT, Application.Status.REVIEW]).count()
+    active_internships = Internship.objects.filter(company=company, status=Internship.Status.IN_PROGRESS).count()
+
+    # Acceptance metrics: accepted applications / total applications
+    accepted_applications = Application.objects.filter(opportunity__company=company, status=Application.Status.ACCEPTED).count()
+    total_applications = total_applicants
+    acceptance_rate = 0
+    if total_applications:
+        try:
+            acceptance_rate = round((accepted_applications / total_applications) * 100)
+        except Exception:
+            acceptance_rate = 0
+
+    # Average rating (if evaluations app exists)
+    avg_rating = None
+    try:
+        from evaluations.models import Evaluation as EvalModel
+        agg = EvalModel.objects.filter(internship__company=company).aggregate(avg=Avg('score'))
+        avg_rating = agg.get('avg') or 0
+    except Exception:
+        avg_rating = 0
+
+    # Normalize float to one decimal
+    try:
+        avg_rating = round(float(avg_rating), 1)
+    except Exception:
+        avg_rating = 0
+
+    return JsonResponse({
+        'ok': True,
+        'activeOffers': active_offers,
+        'totalApplicants': total_applicants,
+        'pendingReview': pending_review,
+        'activeInternships': active_internships,
+        'acceptedApplications': accepted_applications,
+        'totalApplications': total_applications,
+        'acceptanceRate': acceptance_rate,
+        'avgRating': avg_rating,
+    })
+
+
+@login_required(login_url='frontend:login')
+def company_internships_json(request):
+    """Return active internships (in progress) for the logged-in company as JSON."""
+    user = request.user
+    company = getattr(user, 'company', None)
+    if not company:
+        return JsonResponse({'internships': []})
+
+    qs = Internship.objects.filter(company=company, status=Internship.Status.IN_PROGRESS).select_related('student__user', 'application__opportunity')
+    items = []
+    for it in qs:
+        student_name = it.student.user.get_full_name() or it.student.user.username
+        opp_title = ''
+        try:
+            opp_title = it.application.opportunity.title
+        except Exception:
+            opp_title = ''
+        items.append({
+            'id': it.id,
+            'student': student_name,
+            'position': opp_title,
+            'start': it.start_date.isoformat() if it.start_date else None,
+            'end': it.end_date.isoformat() if it.end_date else None,
+            'hours': f"{it.total_hours}",
+        })
+    return JsonResponse({'internships': items})
+
+
+@login_required(login_url='frontend:login')
+def company_pending_applicants_json(request):
+    """Return pending applicants (applications with SENT or REVIEW) for the logged-in company's offers."""
+    user = request.user
+    company = getattr(user, 'company', None)
+    if not company:
+        return JsonResponse({'applications': []})
+
+    qs = Application.objects.filter(opportunity__company=company, status__in=[Application.Status.SENT, Application.Status.REVIEW]).select_related('student__user', 'opportunity').order_by('-created_at')[:20]
+    applications = []
+    for app in qs:
+        student_name = app.student.user.get_full_name() or app.student.user.username
+        applications.append({
+            'id': app.id,
+            'name': student_name,
+            'position': app.opportunity.title if app.opportunity else '',
+            'date': app.created_at.date().isoformat(),
+            'rating': None,
+        })
+
+    return JsonResponse({'applications': applications})
+
+
+@login_required(login_url='frontend:login')
+@require_POST
+def delete_offer_view(request, offer_id):
+    """Mark an opportunity as CANCELLED instead of removing it from the database.
+
+    Only the owning company (or staff/superuser) may perform this action.
+    """
+    opp = Opportunity.objects.filter(id=offer_id).first()
+    if not opp:
+        messages.error(request, 'La oferta solicitada no existe.')
+        return redirect('frontend:company-offers')
+
+    user = request.user
+    if not (user.is_staff or user.is_superuser or (hasattr(user, 'company') and user.company and user.company.id == opp.company_id)):
+        messages.error(request, 'No tienes permisos para cancelar esta oferta.')
+        return redirect('frontend:company-offers')
+
+    if opp.status == Opportunity.Status.CANCELLED:
+        messages.info(request, 'La oferta ya está cancelada.')
+        return redirect('frontend:company-offers')
+
+    # Mark as cancelled to preserve history
+    opp.status = Opportunity.Status.CANCELLED
+    opp.save()
+    messages.success(request, 'Oferta marcada como cancelada.')
+    return redirect('frontend:company-offers')
