@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Aplicantes - {{ offer.title }}{% endblock %}
+
+{% block content %}
+<h1>Aplicantes para: {{ offer.title }}</h1>
+
+{% if applications and applications|length > 0 %}
+  <ul class="company-applicants-list">
+    {% for app in applications %}
+      <li class="card mb-2">
+        <div class="card-body">
+          <p style="font-weight:600">{{ app.student.user.get_full_name|default:app.student.user.username }}</p>
+          <p class="text-muted">{{ app.message|default:'Sin mensaje' }}</p>
+          <p><strong>Estado:</strong> {{ app.get_status_display }}</p>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No hay aplicantes para esta oferta.</p>
+{% endif %}
+
+<p><a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">Volver a Ofertas</a></p>
+{% endblock %}

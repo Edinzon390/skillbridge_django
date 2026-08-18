@@ -1,6 +1,6 @@
 from django.urls import path
 from . import frontend_views
-from .frontend_actions_clean import register_submit, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json
+from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, delete_offer_view, company_dashboard_json, company_internships_json, company_pending_applicants_json
 
 app_name = 'frontend'
 
@@ -11,7 +11,8 @@ urlpatterns = [
     
     # AUTH
     path('login/', frontend_views.login_view, name='login'),
-    path('register/', register_submit, name='register'),
+    # Use the improved registration handler that supports full name and company name
+    path('register/', register_submit_v2, name='register'),
     path('logout/', frontend_views.logout_view, name='logout'),
     path('password-reset/', frontend_views.password_reset_view, name='password-reset'),
     
@@ -34,14 +35,18 @@ urlpatterns = [
     
     # COMPANY
     path('company/dashboard/', frontend_views.company_dashboard, name='company-dashboard'),
+    path('company/dashboard/json/', company_dashboard_json, name='company-dashboard-json'),
     path('company/offers/', frontend_views.company_offers, name='company-offers'),
     path('company/offers/json/', company_offers_json, name='company-offers-json'),
     path('company/offers/create/', create_offer_view, name='create-offer'),
     path('company/offers/<int:offer_id>/edit/', edit_offer_view, name='edit-offer'),
     path('company/offers/<int:offer_id>/', edit_offer_view, name='company-offer-detail'),
     path('company/offers/<int:offer_id>/applicants/', frontend_views.applicants_view, name='company-offer-applicants'),
+    path('company/offers/<int:offer_id>/delete/', delete_offer_view, name='delete-offer'),
     path('company/internships/', frontend_views.company_internships, name='company-internships'),
+    path('company/internships/json/', company_internships_json, name='company-internships-json'),
     path('company/internships/<int:internship_id>/', frontend_views.company_internships, name='company-internship-detail'),
+    path('company/pending-applicants/json/', company_pending_applicants_json, name='company-pending-applicants-json'),
     path('company/internships/<int:internship_id>/evaluate/', frontend_views.hours_validation, name='company-internship-evaluate'),
     path('company/hours-validation/', frontend_views.hours_validation, name='hours-validation'),
     path('company/applicants/', frontend_views.applicants_view, name='applicants'),

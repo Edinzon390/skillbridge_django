@@ -32,6 +32,12 @@
                     <input type="text" id="company_name" name="company_name" class="form-input" placeholder="Ej: Tech Solutions">
                     <div class="form-help">Si te registras como empresa, ingresa el nombre de tu organización.</div>
                 </div>
+                <div id="student-info" class="form-group" style="display: block;">
+                    <label for="full_name" class="form-label">Tu nombre completo</label>
+                    <input type="text" id="full_name" name="full_name" class="form-input" placeholder="Ej: Ana García">
+                    <div class="form-help">Este nombre se mostrará en la plataforma en lugar del correo.</div>
+                </div>
+
                 <div class="form-group">
                     <label for="email" class="form-label">Correo electrónico</label>
                     <input type="email" id="email" name="email" class="form-input" placeholder="tu@correo.com" required>
@@ -50,15 +56,18 @@
 </div>
 
 <script>
-// Mostrar/ocultar campo de nombre de empresa según rol
+// Mostrar/ocultar campos según rol
 const roleRadios = document.querySelectorAll('input[name="role"]');
 function toggleCompanyInfo() {
     const companyInfo = document.getElementById('company-info');
+    const studentInfo = document.getElementById('student-info');
     const selected = Array.from(roleRadios).find(r => r.checked);
     if (selected && selected.value === 'company') {
         companyInfo.style.display = 'block';
+        studentInfo.style.display = 'none';
     } else {
         companyInfo.style.display = 'none';
+        studentInfo.style.display = 'block';
     }
 }
 roleRadios.forEach(r => r.addEventListener('change', toggleCompanyInfo));
