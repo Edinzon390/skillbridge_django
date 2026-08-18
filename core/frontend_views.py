@@ -63,7 +63,38 @@ def password_reset_view(request):
 
 @login_required(login_url='frontend:login')
 def student_dashboard(request):
-    return render(request, 'student/dashboard.html')
+    # Build context for server-rendered dashboard using same models as API
+    user = request.user
+    profile = getattr(user, 'student_profile', None)
+    context = {}
+
+    from internships.models import Opportunity, Application, Internship, Activity
+
+    # counts and lists
+    opportunities_qs = Opportunity.objects.filter(status=Opportunity.Status.ACTIVE)
+    context['opportunities_count'] = opportunities_qs.count()
+
+    if profile:
+        apps_qs = Application.objects.filter(student=profile)
+        context['applications_count'] = apps_qs.count()
+        context['pending_applications'] = apps_qs.filter(status=Application.Status.SENT).count()
+        context['accepted_count'] = apps_qs.filter(status=Application.Status.ACCEPTED).count()
+        internships_qs = Internship.objects.filter(student=profile)
+        context['active_internships'] = internships_qs.filter(status=Internship.Status.IN_PROGRESS).count()
+        context['recent_applications'] = apps_qs.order_by('-created_at')[:5]
+        context['featured_opportunities'] = opportunities_qs.filter(career=profile.career)[:5]
+        # active internship object for detailed panel
+        context['active_internship'] = internships_qs.filter(status=Internship.Status.IN_PROGRESS).select_related('company', 'supervisor', 'application__opportunity').first()
+    else:
+        context['applications_count'] = 0
+        context['pending_applications'] = 0
+        context['accepted_count'] = 0
+        context['active_internships'] = 0
+        context['recent_applications'] = []
+        context['featured_opportunities'] = opportunities_qs[:5]
+        context['active_internship'] = None
+
+    return render(request, 'student/dashboard.html', context)
 
 
 @login_required(login_url='frontend:login')
@@ -108,7 +139,42 @@ def log_hours(request, internship_id):
 
 @login_required(login_url='frontend:login')
 def student_profile(request):
-    return render(request, 'student/profile.html')
+    from internships.models import StudentProfile
+    user = request.user
+    profile = getattr(user, 'student_profile', None)
+
+    if request.method == 'POST':
+        # handle simple profile update via session-authenticated form
+        student_code = request.POST.get('student_code', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        skills_raw = request.POST.get('skills', '').strip()
+        skills = [s.strip() for s in skills_raw.split(',')] if skills_raw else []
+
+        cv = request.FILES.get('cv')
+        portfolio = request.FILES.get('portfolio')
+
+        if not profile:
+            profile = StudentProfile(user=user)
+
+        if student_code:
+            profile.student_code = student_code
+        profile.phone = phone
+        profile.bio = bio
+        if skills:
+            profile.skills = skills
+
+        if cv:
+            profile.cv = cv
+        if portfolio:
+            profile.portfolio = portfolio
+
+        profile.save()
+        from django.contrib import messages
+        messages.success(request, 'Perfil actualizado correctamente.')
+        return redirect('frontend:student-profile')
+
+    return render(request, 'student/profile.html', {'profile': profile})
 
 
 @login_required(login_url='frontend:login')

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Pasantía{% endblock %}
+{% block content %}
+<h1>{{ internship.title|default:internship }}</h1>
+{% if internship %}
+  <p>Empresa: {{ internship.company.name }}</p>
+  <p>Supervisor: {{ internship.supervisor.full_name }}</p>
+  <p>Inicio: {{ internship.start_date }}</p>
+  <p>Fin: {{ internship.end_date }}</p>
+{% else %}
+  <p>Pasantía no encontrada.</p>
+{% endif %}
+{% endblock %}

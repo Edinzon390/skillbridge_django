@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Mis Aplicaciones{% endblock %}
+{% block content %}
+<h1>Mis Aplicaciones</h1>
+<ul>
+  {% for app in user.student_profile.applications.all %}
+    <li>{{ app.opportunity.title }} - {{ app.status }} - {{ app.created_at }}</li>
+  {% empty %}
+    <li>No has enviado aplicaciones aún.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

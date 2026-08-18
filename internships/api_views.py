@@ -1,8 +1,15 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Opportunity
-from .serializers import OpportunitySerializer
+from rest_framework.views import APIView
+from .models import (
+    Opportunity, StudentProfile, Application, Internship,
+    Activity, Evaluation, Evidence
+)
+from .serializers import (
+    OpportunitySerializer, StudentProfileSerializer, ApplicationSerializer,
+    InternshipSerializer, ActivitySerializer, EvaluationSerializer, EvidenceSerializer
+)
 from accounts.models import Role
 
 
@@ -75,3 +82,73 @@ class OpportunityViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
+
+
+class StudentDashboardAPIView(APIView):
+    """Consolidated student dashboard data for the authenticated student."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+        student_profile = getattr(user, 'student_profile', None)
+        if not student_profile:
+            return Response({'detail': 'Perfil de estudiante no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Applications
+        applications = Application.objects.filter(student=student_profile).order_by('-created_at')
+        applications_data = ApplicationSerializer(applications, many=True).data
+
+        # Internships
+        internships = Internship.objects.filter(student=student_profile).order_by('-created_at')
+        internships_data = InternshipSerializer(internships, many=True).data
+
+        # Recent activities (last 20)
+        activities = Activity.objects.filter(internship__student=student_profile).order_by('-date')[:20]
+        activities_data = ActivitySerializer(activities, many=True).data
+
+        # Evaluations
+        evaluations = Evaluation.objects.filter(internship__student=student_profile)
+        evaluations_data = EvaluationSerializer(evaluations, many=True).data
+
+        # Evidences (last 10)
+        evidences = Evidence.objects.filter(internship__student=student_profile).order_by('-created_at')[:10]
+        evidences_data = EvidenceSerializer(evidences, many=True).data
+
+        # Recommended opportunities: active and matching career (limit 10)
+        recommended_qs = Opportunity.objects.filter(status=Opportunity.Status.ACTIVE, career=student_profile.career).order_by('-created_at')[:10]
+        recommended_data = OpportunitySerializer(recommended_qs, many=True).data
+
+        dashboard = {
+            'student_profile': StudentProfileSerializer(student_profile).data,
+            'applications': applications_data,
+            'internships': internships_data,
+            'activities': activities_data,
+            'evaluations': evaluations_data,
+            'evidences': evidences_data,
+            'recommended_opportunities': recommended_data,
+        }
+
+        return Response(dashboard, status=status.HTTP_200_OK)
+
+
+class StudentProfileViewSet(viewsets.ModelViewSet):
+    """ViewSet to retrieve and update the authenticated student's profile."""
+    queryset = StudentProfile.objects.all()
+    serializer_class = StudentProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        # staff can view all
+        if user.is_staff or user.is_superuser:
+            return super().get_queryset()
+        return super().get_queryset().filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        # enforce ownership
+        if serializer.instance.user != self.request.user and not (self.request.user.is_staff or self.request.user.is_superuser):
+            raise permissions.PermissionDenied('No puedes modificar este perfil')
+        serializer.save()

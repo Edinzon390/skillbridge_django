@@ -16,7 +16,7 @@
         <div class="stat-label">
             <i class="fas fa-briefcase"></i> Oportunidades Disponibles
         </div>
-        <div class="stat-value" id="opportunities-count">0</div>
+        <div class="stat-value" id="opportunities-count">{{ opportunities_count|default:0 }}</div>
         <div class="stat-change positive">
             <i class="fas fa-arrow-up"></i> Recientemente publicadas
         </div>
@@ -26,9 +26,9 @@
         <div class="stat-label">
             <i class="fas fa-paper-plane"></i> Aplicaciones Enviadas
         </div>
-        <div class="stat-value" id="applications-count">0</div>
+        <div class="stat-value" id="applications-count">{{ applications_count|default:0 }}</div>
         <div class="stat-change">
-            <span id="pending-applications">0</span> pendientes
+            <span id="pending-applications">{{ pending_applications|default:0 }}</span> pendientes
         </div>
     </div>
 
@@ -36,7 +36,7 @@
         <div class="stat-label">
             <i class="fas fa-check-circle"></i> Aceptadas
         </div>
-        <div class="stat-value" id="accepted-count">0</div>
+        <div class="stat-value" id="accepted-count">{{ accepted_count|default:0 }}</div>
         <div class="stat-change positive">
             Esperando a iniciar
         </div>
@@ -46,7 +46,7 @@
         <div class="stat-label">
             <i class="fas fa-graduation-cap"></i> Pasantías Activas
         </div>
-        <div class="stat-value" id="active-internships">0</div>
+        <div class="stat-value" id="active-internships">{{ active_internships|default:0 }}</div>
         <div class="stat-change">
             En progreso
         </div>
@@ -64,11 +64,19 @@
             <a href="{% url 'frontend:internships' %}" class="btn btn-primary btn-small">Ver todas</a>
         </div>
         <div class="card-body" id="featured-opportunities">
-            <div style="text-align: center; padding: 2rem;">
-                <div class="loading"></div>
-                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando oportunidades...</p>
-            </div>
-        </div>
+                    {% if featured_opportunities %}
+                        <ul>
+                        {% for opp in featured_opportunities %}
+                            <li><strong>{{ opp.title }}</strong> - {{ opp.company.name }} - {{ opp.deadline|date:'d/m/Y' }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div style="text-align: center; padding: 2rem;">
+                            <div class="loading"></div>
+                            <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando oportunidades...</p>
+                        </div>
+                    {% endif %}
+                </div>
     </div>
 
     <!-- MIS APLICACIONES -->
@@ -80,11 +88,19 @@
             <a href="{% url 'frontend:my-applications' %}" class="btn btn-primary btn-small">Ver todas</a>
         </div>
         <div class="card-body" id="recent-applications">
-            <div style="text-align: center; padding: 2rem;">
-                <div class="loading"></div>
-                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando aplicaciones...</p>
-            </div>
-        </div>
+                    {% if recent_applications %}
+                        <ul>
+                        {% for app in recent_applications %}
+                            <li>{{ app.opportunity.title }} - {{ app.status }} - {{ app.created_at|date:'d/m/Y' }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div style="text-align: center; padding: 2rem;">
+                            <div class="loading"></div>
+                            <p style="margin-top: 1rem; color: var(--text-secondary);">No tienes aplicaciones recientes.</p>
+                        </div>
+                    {% endif %}
+                </div>
     </div>
 </div>
 

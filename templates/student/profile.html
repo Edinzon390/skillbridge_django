@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Perfil Estudiante{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2>Perfil</h2>
+    {% if profile and profile.is_eligible %}
+      <span class="badge badge-success">Elegible</span>
+    {% elif profile %}
+      <span class="badge badge-warning">No elegible</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% if profile %}
+      <div class="section">
+        <h3>Datos personales</h3>
+        <p><strong>Nombre:</strong> {{ request.user.get_full_name|default:request.user.username }}</p>
+        <p><strong>Email:</strong> {{ request.user.email }}</p>
+        <p><strong>Código:</strong> {{ profile.student_code }}</p>
+        <p><strong>Teléfono:</strong> {{ profile.phone }}</p>
+        <p><strong>Institución:</strong> {% if profile.institution %}{{ profile.institution.name }}{% else %}<em>No asignada</em>{% endif %}</p>
+        <p><strong>Carrera:</strong> {% if profile.career %}{{ profile.career.name }}{% else %}<em>No asignada</em>{% endif %}</p>
+      </div>
+
+      <div class="section">
+        <h3>Perfil técnico</h3>
+        <p>{{ profile.bio }}</p>
+        <p><strong>Skills:</strong>
+          {% if profile.skills %}
+            {% for s in profile.skills %}
+              <span class="tag">{{ s }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          {% else %}
+            <em>No hay habilidades registradas</em>
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="section">
+        <h3>Currículum</h3>
+        {% if profile.cv %}
+          <p>CV: <a href="{{ profile.cv.url }}">Descargar</a></p>
+        {% else %}
+          <p><em>No hay CV cargado</em></p>
+        {% endif %}
+      </div>
+
+      <div class="section">
+        <h3>Estado académico</h3>
+        <p><strong>Elegibilidad:</strong> {% if profile.is_eligible %}Sí{% else %}No{% endif %}</p>
+      </div>
+
+      <div class="section">
+        <h3>Portafolio / Evidencias</h3>
+        {% if profile.internships.exists %}
+          <p>Tienes pasantías registradas. <a href="/my-internships/">Revisar pasantías y evidencias</a></p>
+        {% else %}
+          <p>No hay pasantías con evidencias.</p>
+        {% endif %}
+      </div>
+
+      <div style="margin-top:1rem;">
+        <a href="/profile/?edit=1" class="btn btn-secondary">Editar perfil</a>
+      </div>
+
+      {% if request.GET.edit %}
+        <hr/>
+        <h3>Editar Perfil</h3>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div>
+            <label>Codigo de estudiante</label>
+            <input type="text" name="student_code" value="{{ profile.student_code }}" />
+          </div>
+          <div>
+            <label>Telefono</label>
+            <input type="text" name="phone" value="{{ profile.phone }}" />
+          </div>
+          <div>
+            <label>Biografia</label>
+            <textarea name="bio">{{ profile.bio }}</textarea>
+          </div>
+          <div>
+            <label>Skills (separadas por coma)</label>
+            <input type="text" name="skills" value="{{ profile.skills|join:", " }}" />
+          </div>
+          <div>
+            <label>Curriculum (CV)</label>
+            {% if profile.cv %}
+              <p>CV actual: <a href="{{ profile.cv.url }}">Descargar</a></p>
+            {% endif %}
+            <input type="file" name="cv" />
+          </div>
+          <div>
+            <label>Portafolio</label>
+            {% if profile.portfolio %}
+              <p>Portafolio actual: <a href="{{ profile.portfolio.url }}">Descargar</a></p>
+            {% endif %}
+            <input type="file" name="portfolio" />
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a href="/profile/" class="btn">Cancelar</a>
+          </div>
+        </form>
+      {% endif %}
+
+    {% else %}
+      <p>No hay perfil de estudiante asociado. Completa el formulario para crear uno.</p>
+      <a href="/profile/?edit=1" class="btn btn-primary">Crear perfil</a>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
