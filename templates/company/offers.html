@@ -15,6 +15,15 @@
             <p class="table-actions">
               <a class="btn btn-small btn-outline" href="{% url 'frontend:edit-offer' offer.id %}">Editar</a>
               <a class="btn btn-small btn-white" href="{% url 'frontend:company-offer-detail' offer.id %}">Ver</a>
+              <a class="btn btn-small btn-secondary" href="{% url 'frontend:company-offer-applicants' offer.id %}" {% if not offer.applications.count or offer.status == 'CANCELLED' %}style="opacity:0.6; pointer-events:none"{% endif %}>Ver Aplicantes</a>
+              {% if offer.status != 'CANCELLED' %}
+              <form method="post" action="{% url 'frontend:delete-offer' offer.id %}" style="display:inline">
+                {% csrf_token %}
+                <button class="btn btn-small btn-danger" type="submit" onclick="return confirm('¿Cancelar esta oferta? Esta acción marcará la oferta como cancelada.')">Cancelar</button>
+              </form>
+              {% else %}
+              <span class="badge badge-warning">Cancelada</span>
+              {% endif %}
             </p>
           </div>
         </div>

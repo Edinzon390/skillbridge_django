@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Aplicaciones | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="applications-shell">
+    <header class="applications-header">
+        <div class="header-icon">
+            <i class="fas fa-paper-plane"></i>
+        </div>
+        <div>
+            <h1>Mis Aplicaciones</h1>
+            <p>Sigue el estado de cada postulación y revisa las oportunidades en las que ya participas.</p>
+        </div>
+    </header>
+
+    <section class="applications-summary">
+        <div class="summary-card">
+            <span class="summary-label">Total</span>
+            <strong>{{ total_applications }}</strong>
+        </div>
+        <div class="summary-card warning">
+            <span class="summary-label">En revisión</span>
+            <strong>{{ review_count }}</strong>
+        </div>
+        <div class="summary-card success">
+            <span class="summary-label">Aceptadas</span>
+            <strong>{{ accepted_count }}</strong>
+        </div>
+    </section>
+
+    <section class="application-list">
+        {% for application in applications %}
+        <article class="application-card">
+            <div class="application-top">
+                <div>
+                    <div class="company-line">
+                        <span class="company-logo">{{ application.company|slice:":1"|upper }}</span>
+                        <span>{{ application.company }}</span>
+                    </div>
+                    <h2>{{ application.position }}</h2>
+                </div>
+                <span class="status-badge status-{{ application.status_class }}">{{ application.status }}</span>
+            </div>
+
+            <div class="application-meta">
+                <span><i class="fas fa-map-marker-alt"></i> {{ application.location }}</span>
+                <span><i class="fas fa-calendar-alt"></i> {{ application.applied_at }}</span>
+                {% if application.deadline %}
+                <span><i class="fas fa-hourglass-half"></i> Cierre: {{ application.deadline }}</span>
+                {% endif %}
+            </div>
+
+            <p class="application-description">{{ application.description }}</p>
+
+            <div class="application-footer">
+                <span class="muted-text">Actualizado {{ application.updated_at }}</span>
+                <button type="button" class="btn btn-outline btn-small">Ver detalle</button>
+            </div>
+        </article>
+        {% empty %}
+        <div class="empty-state">
+            <h3>No tienes aplicaciones aún</h3>
+            <p>Explora las oportunidades disponibles y aplica a la pasantía que mejor se adapte a tu perfil.</p>
+            <a href="{% url 'frontend:internships' %}" class="btn btn-primary">Ver oportunidades</a>
+        </div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .applications-shell {
+        width: min(100%, 1100px);
+        margin: 0 auto;
+    }
+
+    .applications-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        color: var(--text-color);
+    }
+
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: rgba(62, 160, 255, 0.12);
+        color: #7dbcff;
+        font-size: 1.5rem;
+    }
+
+    .applications-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: clamp(2.1rem, 3vw, 3.2rem);
+        line-height: 1.1;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+    }
+
+    .applications-header p {
+        margin: 0;
+        color: var(--muted-color);
+        max-width: 760px;
+        font-size: 1.05rem;
+    }
+
+    .applications-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .summary-card {
+        background: rgba(15, 23, 36, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .summary-card strong {
+        display: block;
+        font-size: 1.55rem;
+        color: var(--text-color);
+        margin-top: 0.25rem;
+    }
+
+    .summary-label {
+        color: var(--muted-color);
+        font-size: 0.82rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .summary-card.warning strong {
+        color: #ffc857;
+    }
+
+    .summary-card.success strong {
+        color: #3dd598;
+    }
+
+    .application-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+
+    .application-card {
+        background: rgba(15, 23, 36, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 1.2rem 1.3rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .application-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .company-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--muted-color);
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .company-logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(62, 160, 255, 0.12);
+        color: #7dbcff;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+
+    .application-card h2 {
+        margin: 0;
+        color: var(--text-color);
+        font-size: clamp(1.5rem, 2vw, 2rem);
+        line-height: 1.2;
+        letter-spacing: -0.03em;
+    }
+
+    .status-badge {
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .status-review {
+        background: rgba(255, 200, 87, 0.14);
+        color: #ffd166;
+        border: 1px solid rgba(255, 200, 87, 0.32);
+    }
+
+    .status-accepted {
+        background: rgba(61, 213, 152, 0.12);
+        color: #5be3aa;
+        border: 1px solid rgba(61, 213, 152, 0.35);
+    }
+
+    .status-pending {
+        background: rgba(124, 140, 255, 0.15);
+        color: #a6b3ff;
+        border: 1px solid rgba(124, 140, 255, 0.35);
+    }
+
+    .status-rejected {
+        background: rgba(255, 99, 132, 0.12);
+        color: #ff8aa2;
+        border: 1px solid rgba(255, 99, 132, 0.32);
+    }
+
+    .application-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem 1.3rem;
+        margin: 1rem 0;
+        color: var(--muted-color);
+        font-size: 0.95rem;
+    }
+
+    .application-meta i {
+        color: #8ab4ff;
+        margin-right: 0.4rem;
+    }
+
+    .application-description {
+        margin: 0;
+        color: var(--muted-color);
+        line-height: 1.75;
+        min-height: 3.4em;
+    }
+
+    .application-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .muted-text {
+        color: var(--muted-color);
+        font-size: 0.9rem;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        background: rgba(15, 23, 36, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+    }
+
+    .empty-state h3 {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+        font-size: 1.7rem;
+    }
+
+    .empty-state p {
+        margin: 0 auto 1.25rem;
+        max-width: 520px;
+        color: var(--muted-color);
+        line-height: 1.7;
+    }
+
+    @media (max-width: 900px) {
+        .application-list {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .applications-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .applications-header {
+            flex-direction: column;
+        }
+
+        .application-top,
+        .application-footer {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}

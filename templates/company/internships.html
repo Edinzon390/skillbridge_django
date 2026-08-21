@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Pasantías Activas - Empresa{% endblock %}
+
+{% block content %}
+<h1>Pasantías Activas</h1>
+
+{% if internships and internships|length > 0 %}
+  <ul class="company-internships-list">
+    {% for intern in internships %}
+      <li class="card mb-2">
+        <div class="card-body">
+          <p style="font-weight:600">{{ intern.student.user.get_full_name|default:intern.student.user.username }}</p>
+          <p class="text-muted">Posición: {% if intern.application %}{{ intern.application.opportunity.title }}{% else %}--{% endif %}</p>
+          <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
+          <p><strong>Horas trabajadas:</strong> {{ intern.total_hours }}</p>
+          <p class="table-actions">
+            <a class="btn btn-small btn-outline" href="{% url 'frontend:company-internship-detail' intern.id %}">Ver</a>
+            <a class="btn btn-small btn-primary" href="{% url 'frontend:company-internship-evaluate' intern.id %}">Evaluar</a>
+          </p>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No hay pasantías activas para tu empresa.</p>
+{% endif %}
+
+{% endblock %}

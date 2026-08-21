@@ -78,7 +78,15 @@ def my_applications(request):
 
 @login_required(login_url='frontend:login')
 def my_internships(request):
-    return render(request, 'student/my_internships.html')
+    from internships.models import Internship
+    internships = []
+    try:
+        student_profile = getattr(request.user, 'student_profile', None)
+        if student_profile:
+            internships = Internship.objects.filter(student=student_profile).select_related('company', 'supervisor', 'application')
+    except Exception:
+        internships = []
+    return render(request, 'student/my_internships.html', {'internships': internships})
 
 
 @login_required(login_url='frontend:login')
@@ -109,6 +117,18 @@ def company_dashboard(request):
 
 
 @login_required(login_url='frontend:login')
+def company_internships(request, internship_id=None):
+    # Show internships for the logged-in company user
+    from internships.models import Internship
+    company = getattr(request.user, 'company', None)
+    internships = []
+    if company:
+        internships = Internship.objects.filter(company=company).select_related('student__user', 'supervisor', 'application__opportunity')
+    context = {'internships': internships}
+    return render(request, 'company/internships.html', context)
+
+
+@login_required(login_url='frontend:login')
 def company_offers(request):
     from internships.models import Opportunity
     company = getattr(request.user, 'company', None)
@@ -118,12 +138,22 @@ def company_offers(request):
 
 @login_required(login_url='frontend:login')
 def applicants_view(request, offer_id):
-    return render(request, 'company/applicants.html')
+    from internships.models import Opportunity, Application
+    opp = Opportunity.objects.filter(id=offer_id).first()
+    if not opp:
+        messages.error(request, 'La oferta solicitada no existe.')
+        return redirect('frontend:company-offers')
+
+    user = request.user
+    if not (user.is_staff or user.is_superuser or (hasattr(user, 'company') and user.company and user.company.id == opp.company_id)):
+        messages.error(request, 'No tienes permisos para ver los aplicantes de esta oferta.')
+        return redirect('frontend:company-offers')
+
+    # Only return real applications stored in DB
+    applications = opp.applications.select_related('student__user').all()
+    return render(request, 'company/applicants.html', {'applications': applications, 'offer': opp})
 
 
-@login_required(login_url='frontend:login')
-def company_internships(request, internship_id=None):
-    return render(request, 'company/internships.html')
 
 
 @login_required(login_url='frontend:login')
