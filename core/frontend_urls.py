@@ -59,4 +59,7 @@ urlpatterns = [
     
     # API
     path('api/user-roles/', frontend_views.get_user_roles, name='api-user-roles'),
+
+    path('student/profile/', frontend_views.student_profile, name='student-profile'),
+    path('student/careers/<int:institution_id>/', frontend_views.careers_by_institution_json, name='careers-by-institution'),
 ]

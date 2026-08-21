@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.75rem;"><i class="fas fa-user-graduate"></i> Mi Perfil</h1>
+    <p style="color: var(--text-secondary);">
+        Completa tu información académica para poder postular a oportunidades.
+    </p>
+</div>
+
+<div style="max-width: 900px;">
+    {% if profile and not profile.is_eligible %}
+    <div class="alert alert-warning" style="margin-bottom: 1rem;">
+        <i class="fas fa-info-circle"></i>
+        Tu perfil aún no ha sido marcado como elegible por tu institución. Podrás postular a
+        oportunidades una vez tu coordinador valide tu elegibilidad.
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="card">
+        {% csrf_token %}
+        <div class="card-body">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Institución *</label>
+                    <select name="institution" id="institution-select" class="form-input" required>
+                        <option value="">Selecciona tu institución</option>
+                        {% for inst in institutions %}
+                        <option value="{{ inst.id }}"
+                            {% if profile and profile.institution_id == inst.id %}selected{% endif %}>
+                            {{ inst.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Carrera técnica *</label>
+                    <select name="career" id="career-select" class="form-input" required>
+                        {% if profile and profile.career %}
+                        <option value="{{ profile.career.id }}" selected>{{ profile.career.name }}</option>
+                        {% else %}
+                        <option value="">Selecciona primero tu institución</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Código de estudiante *</label>
+                    <input type="text" name="student_code" class="form-input"
+                        value="{{ profile.student_code|default:'' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" name="phone" class="form-input" value="{{ profile.phone|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Biografía</label>
+                <textarea name="bio" class="form-input" rows="4"
+                    placeholder="Cuéntanos brevemente sobre ti, tus intereses y objetivos profesionales.">{{ profile.bio|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Habilidades</label>
+                <input type="text" name="skills" class="form-input"
+                    value="{{ skills_text }}" placeholder="Python, Django, SQL, Trabajo en equipo">
+                <small style="color: var(--text-secondary);">Sepáralas con comas.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Hoja de vida (CV)</label>
+                    <input type="file" name="cv" class="form-input" accept=".pdf,.doc,.docx">
+                    {% if profile and profile.cv %}
+                    <small><a href="{{ profile.cv.url }}" target="_blank">Ver archivo actual</a></small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Portafolio</label>
+                    <input type="file" name="portfolio" class="form-input" accept=".pdf,.doc,.docx">
+                    {% if profile and profile.portfolio %}
+                    <small><a href="{{ profile.portfolio.url }}" target="_blank">Ver archivo actual</a></small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-top:1rem;">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                <a href="{% url 'frontend:student-dashboard' %}" class="btn btn-outline">Volver al Dashboard</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const institutionSelect = document.getElementById('institution-select');
+    const careerSelect = document.getElementById('career-select');
+    const careersUrlTemplate = "{% url 'frontend:careers-by-institution' institution_id=0 %}";
+
+    function loadCareers(institutionId, selectedCareerId) {
+        careerSelect.innerHTML = '<option value="">Cargando...</option>';
+        if (!institutionId) {
+            careerSelect.innerHTML = '<option value="">Selecciona primero tu institución</option>';
+            return;
+        }
+        const url = careersUrlTemplate.replace('0', institutionId);
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                careerSelect.innerHTML = '<option value="">Selecciona tu carrera</option>';
+                data.careers.forEach(career => {
+                    const opt = document.createElement('option');
+                    opt.value = career.id;
+                    opt.textContent = career.name;
+                    if (selectedCareerId && String(career.id) === String(selectedCareerId)) {
+                        opt.selected = true;
+                    }
+                    careerSelect.appendChild(opt);
+                });
+            })
+            .catch(() => {
+                careerSelect.innerHTML = '<option value="">No se pudieron cargar las carreras</option>';
+            });
+    }
+
+    institutionSelect.addEventListener('change', function () {
+        loadCareers(this.value, null);
+    });
+
+    loadCareers('{{ profile.institution_id|default:"" }}', '{{ profile.career_id|default:"" }}');
+});
+</script>
+{% endblock %}

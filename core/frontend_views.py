@@ -184,3 +184,86 @@ def get_user_roles(request):
         if role:
             roles = [role]
     return JsonResponse({'roles': roles})
+
+@login_required(login_url='frontend:login')
+def student_profile(request):
+    from internships.models import StudentProfile
+    from institutions.models import Institution, TechnicalCareer
+
+    if request.user.role != 'STUDENT':
+        messages.error(request, 'Esta sección es solo para estudiantes.')
+        return redirect(get_dashboard_redirect_url(request.user))
+
+    profile = getattr(request.user, 'student_profile', None)
+    institutions = Institution.objects.filter(is_active=True).order_by('name')
+
+    if request.method == 'POST':
+        institution_id = request.POST.get('institution')
+        career_id = request.POST.get('career')
+        student_code = request.POST.get('student_code', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        skills_raw = request.POST.get('skills', '')
+        skills = [s.strip() for s in skills_raw.split(',') if s.strip()]
+
+        errors = []
+        institution = Institution.objects.filter(id=institution_id).first() if institution_id else None
+        career = TechnicalCareer.objects.filter(id=career_id, institution=institution).first() if (career_id and institution) else None
+
+        if not institution:
+            errors.append('Selecciona una institución válida.')
+        if not career:
+            errors.append('Selecciona una carrera técnica válida.')
+        if not student_code:
+            errors.append('El código de estudiante es obligatorio.')
+        elif StudentProfile.objects.filter(student_code=student_code).exclude(
+            user=request.user
+        ).exists():
+            errors.append('Ese código de estudiante ya está en uso.')
+
+        if not errors:
+            if profile is None:
+                profile = StudentProfile(user=request.user)
+            profile.institution = institution
+            profile.career = career
+            profile.student_code = student_code
+            profile.phone = phone
+            profile.bio = bio
+            profile.skills = skills
+
+            if request.FILES.get('cv'):
+                profile.cv = request.FILES['cv']
+            if request.FILES.get('portfolio'):
+                profile.portfolio = request.FILES['portfolio']
+
+            profile.save()
+            messages.success(request, 'Perfil actualizado correctamente.')
+            return redirect('frontend:student-profile')
+
+        for error in errors:
+            messages.error(request, error)
+
+    careers = []
+    if profile and profile.institution_id:
+        careers = TechnicalCareer.objects.filter(institution=profile.institution, is_active=True)
+    elif institutions:
+        careers = TechnicalCareer.objects.filter(institution=institutions.first(), is_active=True) if institutions.exists() else []
+
+    context = {
+        'profile': profile,
+        'institutions': institutions,
+        'careers': careers,
+        'skills_text': ', '.join(profile.skills) if profile and profile.skills else '',
+    }
+    return render(request, 'student/profile.html', context)
+
+
+@login_required(login_url='frontend:login')
+def careers_by_institution_json(request, institution_id):
+    from institutions.models import TechnicalCareer
+    careers = TechnicalCareer.objects.filter(
+        institution_id=institution_id, is_active=True
+    ).order_by('name')
+    return JsonResponse({
+        'careers': [{'id': c.id, 'name': c.name} for c in careers]
+    })
