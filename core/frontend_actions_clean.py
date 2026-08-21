@@ -4,7 +4,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from accounts.models import Role, User
 from companies.models import Company, Supervisor
-from internships.models import Opportunity
+from internships.models import Opportunity, Application, Internship
 from institutions.models import Institution, TechnicalCareer
 from django.utils import timezone
 
@@ -313,7 +313,95 @@ def company_offers_json(request):
 
 
 from django.db.models import Avg
-from internships.models import Application, Internship
+
+
+@login_required(login_url='frontend:login')
+def student_dashboard_json(request):
+    """Return the data used by the student dashboard from the real database."""
+    student_profile = getattr(request.user, 'student_profile', None)
+    if not student_profile:
+        return JsonResponse({
+            'stats': {
+                'opportunities': 0,
+                'applications': 0,
+                'accepted': 0,
+                'active': 0,
+                'pending': 0,
+            },
+            'featuredOpportunities': [],
+            'recentApplications': [],
+            'milestones': [],
+        })
+
+    active_opportunities = Opportunity.objects.filter(
+        status=Opportunity.Status.ACTIVE,
+        deadline__gte=timezone.now(),
+    ).select_related('company').order_by('-created_at')[:6]
+
+    student_applications_all = Application.objects.filter(student=student_profile).select_related('opportunity__company').order_by('-created_at')
+    student_applications = student_applications_all[:10]
+    active_internships = Internship.objects.filter(student=student_profile, status=Internship.Status.IN_PROGRESS).select_related('application__opportunity', 'company').order_by('-created_at')
+
+    stats = {
+        'opportunities': active_opportunities.count(),
+        'applications': student_applications_all.count(),
+        'accepted': student_applications_all.filter(status=Application.Status.ACCEPTED).count(),
+        'active': active_internships.count(),
+        'pending': student_applications_all.filter(status__in=[Application.Status.SENT, Application.Status.REVIEW]).count(),
+    }
+
+    featured_opportunities = []
+    for opp in active_opportunities[:3]:
+        featured_opportunities.append({
+            'id': opp.id,
+            'title': opp.title,
+            'company': opp.company.name if opp.company else 'Empresa',
+            'hours': opp.vacancies if opp.vacancies else 0,
+            'deadline': opp.deadline.isoformat() if opp.deadline else None,
+            'url': f"/student/opportunities/{opp.id}/",
+        })
+
+    recent_applications = []
+    for app in student_applications[:3]:
+        status = app.status
+        status_map = {
+            Application.Status.SENT: ('pending', 'Pendiente'),
+            Application.Status.REVIEW: ('pending', 'En revisión'),
+            Application.Status.ACCEPTED: ('accepted', 'Aceptada'),
+            Application.Status.REJECTED: ('rejected', 'Rechazada'),
+        }
+        status_class, status_label = status_map.get(status, ('pending', 'Pendiente'))
+        recent_applications.append({
+            'id': app.id,
+            'position': app.opportunity.title if app.opportunity else 'Sin posición',
+            'company': app.opportunity.company.name if app.opportunity and app.opportunity.company else 'Empresa',
+            'status': status_class,
+            'statusLabel': status_label,
+            'date': app.created_at.date().isoformat() if app.created_at else None,
+        })
+
+    milestones = []
+    for opp in active_opportunities[:4]:
+        milestones.append({
+            'event': f'Aplicación abierta - {opp.title}',
+            'date': opp.deadline.date().isoformat() if opp.deadline else timezone.now().date().isoformat(),
+            'status': 'Por venir',
+        })
+
+    for internship in active_internships[:2]:
+        if internship.end_date:
+            milestones.append({
+                'event': f'Fin de pasantía - {internship.application.opportunity.title if internship.application and internship.application.opportunity else "Pasantía"}',
+                'date': internship.end_date.isoformat(),
+                'status': 'Activo',
+            })
+
+    return JsonResponse({
+        'stats': stats,
+        'featuredOpportunities': featured_opportunities,
+        'recentApplications': recent_applications,
+        'milestones': milestones[:4],
+    })
 
 @login_required(login_url='frontend:login')
 def company_dashboard_json(request):
