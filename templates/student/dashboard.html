@@ -169,116 +169,75 @@
 
 {% block extra_js %}
 <script>
-// Cargar datos del dashboard
 async function loadDashboardData() {
     try {
-        // Simular datos (reemplazar con API real)
-        const stats = {
-            opportunities: 12,
-            applications: 5,
-            accepted: 2,
-            active: 1,
-            pending: 3
-        };
+        const response = await fetch('{% url "frontend:student-dashboard-json" %}', { credentials: 'same-origin' });
+        if (!response.ok) {
+            throw new Error('No se pudo cargar el dashboard');
+        }
 
-        document.getElementById('opportunities-count').textContent = stats.opportunities;
-        document.getElementById('applications-count').textContent = stats.applications;
-        document.getElementById('accepted-count').textContent = stats.accepted;
-        document.getElementById('active-internships').textContent = stats.active;
-        document.getElementById('pending-applications').textContent = stats.pending;
+        const payload = await response.json();
+        const stats = payload.stats || {};
 
-        // Cargar oportunidades destacadas
-        loadFeaturedOpportunities();
-        loadRecentApplications();
-        loadMilestones();
+        document.getElementById('opportunities-count').textContent = stats.opportunities || 0;
+        document.getElementById('applications-count').textContent = stats.applications || 0;
+        document.getElementById('accepted-count').textContent = stats.accepted || 0;
+        document.getElementById('active-internships').textContent = stats.active || 0;
+        document.getElementById('pending-applications').textContent = stats.pending || 0;
+
+        loadFeaturedOpportunities(payload.featuredOpportunities || []);
+        loadRecentApplications(payload.recentApplications || []);
+        loadMilestones(payload.milestones || []);
     } catch (error) {
-        console.error('Error cargando datos:', error);
+        console.error('Error cargando datos del dashboard:', error);
+        document.getElementById('featured-opportunities').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No se pudieron cargar las oportunidades.</p>';
+        document.getElementById('recent-applications').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No se pudieron cargar las aplicaciones.</p>';
+        document.getElementById('milestones-list').innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">No hay hitos disponibles.</td></tr>';
     }
 }
 
-function loadFeaturedOpportunities() {
-    const opportunities = [
-        {
-            id: 1,
-            position: 'Pasante de Desarrollo Frontend',
-            company: 'Tech Solutions Inc',
-            hours: 180,
-            deadline: '2024-09-30'
-        },
-        {
-            id: 2,
-            position: 'Pasante de Data Science',
-            company: 'Data Analytics Pro',
-            hours: 200,
-            deadline: '2024-10-15'
-        },
-        {
-            id: 3,
-            position: 'Pasante de Backend',
-            company: 'CloudTech',
-            hours: 160,
-            deadline: '2024-09-25'
-        }
-    ];
+function loadFeaturedOpportunities(opportunities) {
+    if (!opportunities.length) {
+        document.getElementById('featured-opportunities').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No hay oportunidades disponibles</p>';
+        return;
+    }
 
     let html = '';
-    opportunities.forEach(opp => {
+    opportunities.forEach((opp) => {
+        const deadline = opp.deadline ? new Date(opp.deadline).toLocaleDateString('es-ES') : 'Sin fecha límite';
+        const hours = opp.hours || opp.vacancies || 0;
         html += `
             <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div>
-                        <p style="font-weight: 600; margin-bottom: 0.3rem;">${opp.position}</p>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem;">${opp.company}</p>
+                        <p style="font-weight: 600; margin-bottom: 0.3rem;">${opp.title || opp.position || 'Oportunidad'}</p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">${opp.company || 'Empresa'}</p>
                     </div>
-                    <span class="badge badge-primary">${opp.hours}h</span>
+                    <span class="badge badge-primary">${hours}h</span>
                 </div>
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.8rem;">
-                    Límite: ${new Date(opp.deadline).toLocaleDateString('es-ES')}
+                    Límite: ${deadline}
                 </p>
-                <a href="/student/opportunities/${opp.id}/" class="btn btn-primary btn-small">Aplicar</a>
+                <a href="${opp.url || '/student/opportunities/'}" class="btn btn-primary btn-small">Aplicar</a>
             </div>
         `;
     });
 
-    document.getElementById('featured-opportunities').innerHTML = html || '<p style="text-align: center; color: var(--text-secondary);">No hay oportunidades disponibles</p>';
+    document.getElementById('featured-opportunities').innerHTML = html;
 }
 
-function loadRecentApplications() {
-    const applications = [
-        {
-            id: 1,
-            position: 'Pasante Frontend',
-            company: 'Tech Solutions',
-            status: 'pending',
-            date: '2024-08-10'
-        },
-        {
-            id: 2,
-            position: 'Pasante Backend',
-            company: 'CloudTech',
-            status: 'accepted',
-            date: '2024-08-08'
-        },
-        {
-            id: 3,
-            position: 'Pasante QA',
-            company: 'Quality First',
-            status: 'rejected',
-            date: '2024-08-05'
-        }
-    ];
+function loadRecentApplications(applications) {
+    if (!applications.length) {
+        document.getElementById('recent-applications').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No hay aplicaciones aún</p>';
+        return;
+    }
 
     let html = '';
-    applications.forEach(app => {
+    applications.forEach((app) => {
         const statusBadge = {
-            'pending': 'badge-warning',
-            'accepted': 'badge-success',
-            'rejected': 'badge-danger'
-        };
-        const statusText = {
-            'pending': 'Pendiente',
-            'accepted': 'Aceptada',
-            'rejected': 'Rechazada'
+            pending: 'badge-warning',
+            accepted: 'badge-success',
+            rejected: 'badge-danger'
         };
 
         html += `
@@ -287,34 +246,32 @@ function loadRecentApplications() {
                     <p style="font-weight: 600; margin-bottom: 0.3rem;">${app.position}</p>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">${app.company}</p>
                 </div>
-                <span class="badge ${statusBadge[app.status]}">${statusText[app.status]}</span>
+                <span class="badge ${statusBadge[app.status] || 'badge-secondary'}">${app.statusLabel || 'Pendiente'}</span>
             </div>
         `;
     });
 
-    document.getElementById('recent-applications').innerHTML = html || '<p style="text-align: center; color: var(--text-secondary);">No hay aplicaciones aún</p>';
+    document.getElementById('recent-applications').innerHTML = html;
 }
 
-function loadMilestones() {
-    const milestones = [
-        { event: 'Límite de aplicación - Tech Solutions', date: '2024-09-30' },
-        { event: 'Inicio de pasantía - CloudTech', date: '2024-09-15' },
-        { event: 'Evaluación intermedia', date: '2024-10-15' },
-        { event: 'Fin de pasantía', date: '2024-12-15' }
-    ];
+function loadMilestones(milestones) {
+    if (!milestones.length) {
+        document.getElementById('milestones-list').innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">No hay hitos disponibles.</td></tr>';
+        return;
+    }
 
     let html = '';
-    milestones.forEach(milestone => {
+    milestones.forEach((milestone) => {
         const dateObj = new Date(milestone.date);
         const isUpcoming = dateObj > new Date();
-        
+
         html += `
             <tr>
                 <td>${milestone.event}</td>
                 <td>${dateObj.toLocaleDateString('es-ES')}</td>
                 <td>
                     <span class="badge ${isUpcoming ? 'badge-warning' : 'badge-success'}">
-                        ${isUpcoming ? 'Por venir' : 'Completado'}
+                        ${milestone.status || (isUpcoming ? 'Por venir' : 'Completado')}
                     </span>
                 </td>
             </tr>
@@ -324,7 +281,6 @@ function loadMilestones() {
     document.getElementById('milestones-list').innerHTML = html;
 }
 
-// Cargar datos al abrir la página
 document.addEventListener('DOMContentLoaded', loadDashboardData);
 </script>
 {% endblock %}
