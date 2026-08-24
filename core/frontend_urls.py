@@ -1,6 +1,6 @@
 from django.urls import path
 from . import frontend_views
-from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, delete_offer_view, company_dashboard_json, company_internships_json, company_pending_applicants_json
+from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, delete_offer_view, company_dashboard_json, student_dashboard_json, company_internships_json, company_pending_applicants_json
 
 app_name = 'frontend'
 
@@ -18,6 +18,7 @@ urlpatterns = [
     
     # STUDENT
     path('dashboard/', frontend_views.student_dashboard, name='student-dashboard'),
+    path('dashboard/json/', student_dashboard_json, name='student-dashboard-json'),
     path('internships/', frontend_views.internships_list, name='internships'),
     path('applications/', frontend_views.my_applications, name='my-applications'),
     path('my-internships/', frontend_views.my_internships, name='my-internships'),

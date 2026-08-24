@@ -418,6 +418,32 @@ def company_pending_applicants_json(request):
 
 
 @login_required(login_url='frontend:login')
+def student_dashboard_json(request):
+    """Return basic dashboard counts for the logged-in student as JSON."""
+    user = request.user
+
+    # Total available opportunities (active)
+    try:
+        opportunities = Opportunity.objects.filter(status=Opportunity.Status.ACTIVE).count()
+    except Exception:
+        opportunities = 0
+
+    # Applications for this student
+    try:
+        applications = Application.objects.filter(student__user=user).count()
+    except Exception:
+        applications = 0
+
+    # Accepted applications for this student
+    try:
+        accepted = Application.objects.filter(student__user=user, status=Application.Status.ACCEPTED).count()
+    except Exception:
+        accepted = 0
+
+    return JsonResponse({'stats': {'opportunities': opportunities, 'applications': applications, 'accepted': accepted}})
+
+
+@login_required(login_url='frontend:login')
 @require_POST
 def delete_offer_view(request, offer_id):
     """Mark an opportunity as CANCELLED instead of removing it from the database.
