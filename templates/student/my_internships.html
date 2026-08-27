@@ -3,20 +3,105 @@
 {% block title %}Mis Pasantías{% endblock %}
 
 {% block content %}
+<style>
+  .internships-list {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  .internship-item {
+    list-style: none;
+  }
+
+  .internship-card {
+    text-align: center;
+  }
+
+  .internship-details {
+    display: none;
+    width: min(100%, 48rem);
+    box-sizing: border-box;
+    margin: -0.5rem auto 1rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(74, 144, 226, 0.35);
+    border-radius: 0.75rem;
+    background: var(--card-bg, #f8f9fa);
+    text-align: center;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+  }
+
+  .internship-details.is-visible {
+    display: block;
+    animation: internshipDetailsIn 240ms ease-out;
+  }
+
+  .internship-details h2 {
+    margin: 0 0 1rem;
+  }
+
+  .internship-details p {
+    margin: 0.65rem auto;
+  }
+
+  .internship-details strong {
+    color: var(--primary-color, #4a90e2);
+  }
+
+  @keyframes internshipDetailsIn {
+    from { opacity: 0; max-height: 0; transform: translateY(-0.5rem); }
+    to { opacity: 1; max-height: 40rem; transform: translateY(0); }
+  }
+</style>
+
 <h1>Mis Pasantías</h1>
 
 {% if internships and internships|length > 0 %}
   <ul class="internships-list">
     {% for intern in internships %}
-      <li class="card mb-2">
-        <div class="card-body">
+      <li class="internship-item">
+        <div class="card mb-2 internship-card">
+          <div class="card-body">
           <p style="font-weight:600">{{ intern.company.name }}</p>
-          <p class="text-muted">Supervisor: {{ intern.supervisor.full_name if intern.supervisor }}</p>
+          <p class="text-muted">
+            Supervisor:
+            {% if intern.supervisor %}
+              {{ intern.supervisor.full_name }}
+            {% else %}
+              Sin supervisor asignado
+            {% endif %}
+          </p>
           <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
           <p><strong>Horas:</strong> {{ intern.total_hours }}</p>
           <p class="table-actions">
-            <a class="btn btn-small btn-outline" href="{% url 'frontend:student-internship-detail' intern.id %}">Ver</a>
+            <button type="button" class="btn btn-small btn-outline"
+                    aria-expanded="false" aria-controls="internship-details-{{ intern.id }}"
+                    onclick="toggleInternshipDetails('internship-details-{{ intern.id }}', this)">
+              <i class="fas fa-eye"></i> Ver
+            </button>
           </p>
+          </div>
+        </div>
+
+        <div id="internship-details-{{ intern.id }}" class="internship-details" aria-hidden="true">
+          <h2>Detalles de la pasantía</h2>
+          <p><strong>Oportunidad:</strong> {{ intern.application.opportunity.title|default:'No registrada' }}</p>
+          <p><strong>Empresa:</strong> {{ intern.company.name|default:'No registrada' }}</p>
+          <p><strong>Supervisor:</strong>
+            {% if intern.supervisor %}
+              {{ intern.supervisor.full_name }}
+            {% else %}
+              Sin supervisor asignado
+            {% endif %}
+          </p>
+          <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
+          <p><strong>Horas acumuladas:</strong> {{ intern.total_hours }}</p>
+          <p><strong>Fecha de inicio:</strong> {{ intern.start_date|date:'d/m/Y'|default:'No definida' }}</p>
+          <p><strong>Fecha de finalización:</strong> {{ intern.end_date|date:'d/m/Y'|default:'No definida' }}</p>
+          <button type="button" class="btn btn-small btn-outline"
+                  onclick="toggleInternshipDetails('internship-details-{{ intern.id }}')">
+            Ocultar detalles
+          </button>
         </div>
       </li>
     {% endfor %}
@@ -24,5 +109,21 @@
 {% else %}
   <p>No tienes pasantías registradas.</p>
 {% endif %}
+
+<script>
+function toggleInternshipDetails(detailsId, button) {
+  const details = document.getElementById(detailsId);
+  if (!details) return;
+  const isVisible = details.classList.toggle('is-visible');
+  details.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+  button = button || document.querySelector(`[aria-controls="${detailsId}"]`);
+  if (button) {
+    button.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+    button.innerHTML = isVisible
+      ? '<i class="fas fa-eye-slash"></i> Ocultar detalles'
+      : '<i class="fas fa-eye"></i> Ver';
+  }
+}
+</script>
 
 {% endblock %}

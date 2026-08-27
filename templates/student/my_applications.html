@@ -55,7 +55,7 @@
 
             <div class="application-footer">
                 <span class="muted-text">Actualizado {{ application.updated_at }}</span>
-                <button type="button" class="btn btn-outline btn-small">Ver detalle</button>
+                <a href="{% url 'frontend:student-opportunity-detail' application.opportunity_id %}" class="btn btn-outline btn-small">Ver detalle</a>
             </div>
         </article>
         {% empty %}

@@ -1,9 +1,34 @@
 // Archivo JS mínimo recreado. Mantener pequeño para evitar errores si los templates esperan este archivo.
 document.addEventListener('DOMContentLoaded', function(){
+  requestAnimationFrame(function(){
+    document.body.classList.add('page-ready');
+  });
+
   // Cerrar alertas
   document.querySelectorAll('.alert .alert-close').forEach(function(el){
     el.addEventListener('click', function(){
-      var p = el.closest('.alert'); if(p) p.style.display='none';
+      var p = el.closest('.alert');
+      if(p){
+        p.classList.add('is-dismissing');
+        window.setTimeout(function(){ p.style.display='none'; }, 220);
+      }
+    });
+  });
+
+  // Fade between internal GET navigations without delaying external or modified clicks.
+  document.querySelectorAll('a[href]').forEach(function(link){
+    link.addEventListener('click', function(event){
+      if(event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
+         event.shiftKey || event.altKey || link.target === '_blank' || link.hasAttribute('download')){
+        return;
+      }
+      var url = new URL(link.href, window.location.href);
+      if(url.origin !== window.location.origin || url.pathname === window.location.pathname){
+        return;
+      }
+      event.preventDefault();
+      document.body.classList.add('page-leaving');
+      window.setTimeout(function(){ window.location.href = url.href; }, 180);
     });
   });
 

@@ -1,9 +1,10 @@
-﻿from django.shortcuts import render as django_render, redirect
+from django.shortcuts import render as django_render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q
+from datetime import timedelta
 
 from .frontend_actions_clean import get_dashboard_redirect_url, register_submit, create_offer_view, edit_offer_view, company_profile_view, save_chat_message
 
@@ -66,14 +67,194 @@ def student_dashboard(request):
     return render(request, 'student/dashboard.html')
 
 
+def _opportunity_area_key(area_name):
+    normalized = (area_name or '').strip().lower()
+    if 'front' in normalized:
+        return 'frontend'
+    if 'back' in normalized:
+        return 'backend'
+    if 'full' in normalized or 'stack' in normalized:
+        return 'fullstack'
+    if 'devops' in normalized or 'ops' in normalized:
+        return 'devops'
+    if 'qa' in normalized or 'quality' in normalized:
+        return 'qa'
+    if 'data' in normalized or 'science' in normalized:
+        return 'datascience'
+    return 'backend'
+
+
+def _serialize_opportunity_for_frontend(opportunity):
+    company = opportunity.company
+    career = opportunity.career
+    institution = opportunity.institution
+    institution_config = getattr(institution, 'config', None)
+
+    location_name = 'Bogotá'
+    location_key = 'bogota'
+    modality_text = (opportunity.modality or '').lower()
+    if 'remote' in modality_text:
+        location_name = 'Remoto'
+        location_key = 'remoto'
+    else:
+        address = (company.address or '').lower()
+        if 'medell' in address:
+            location_name = 'Medellín'
+            location_key = 'medellin'
+        elif 'cali' in address:
+            location_name = 'Cali'
+            location_key = 'cali'
+        elif 'barranquilla' in address:
+            location_name = 'Barranquilla'
+            location_key = 'barranquilla'
+
+    area_name = career.name if career else 'General'
+    area_key = _opportunity_area_key(area_name)
+    required_hours = getattr(institution_config, 'required_hours', None) or 160
+
+    return {
+        'id': opportunity.id,
+        'position': opportunity.title,
+        'company': company.name,
+        'company_description': company.website or company.address or company.name,
+        'location': location_name,
+        'location_key': location_key,
+        'area': area_name,
+        'area_key': area_key,
+        'required_hours': int(required_hours),
+        'deadline': opportunity.deadline.isoformat() if opportunity.deadline else (opportunity.created_at + timedelta(days=30)).isoformat(),
+        'description': opportunity.description or 'Sin descripción disponible.',
+        'required_skills': list(opportunity.requirements or []),
+        'applicants_count': opportunity.applications.count(),
+        'created_at': opportunity.created_at.isoformat(),
+    }
+
+
 @login_required(login_url='frontend:login')
 def internships_list(request):
-    return render(request, 'student/opportunities.html')
+    from internships.models import Opportunity
+
+    opportunities = (
+        Opportunity.objects.filter(status=Opportunity.Status.ACTIVE)
+        .select_related('company', 'institution', 'career')
+        .prefetch_related('applications')
+        .order_by('-created_at')
+    )
+    opportunities_data = [_serialize_opportunity_for_frontend(item) for item in opportunities]
+    return render(request, 'student/opportunities.html', {'opportunities_json': opportunities_data})
+
+
+@login_required(login_url='frontend:login')
+def opportunity_detail_json(request, opportunity_id):
+    from internships.models import Opportunity
+
+    opportunity = get_object_or_404(
+        Opportunity.objects.select_related('company', 'institution', 'career'),
+        id=opportunity_id,
+        status=Opportunity.Status.ACTIVE,
+    )
+    data = _serialize_opportunity_for_frontend(opportunity)
+    data['company'] = {
+        'name': data['company'],
+        'description': data['company_description'],
+    }
+    return JsonResponse(data)
 
 
 @login_required(login_url='frontend:login')
 def my_applications(request):
-    return render(request, 'student/my_applications.html')
+    from internships.models import Application
+
+    applications = (
+        Application.objects.filter(student__user=request.user)
+        .select_related('opportunity__company', 'opportunity')
+        .order_by('-created_at')
+    )
+    status_labels = {
+        Application.Status.SENT: ('Enviada', 'pending'),
+        Application.Status.REVIEW: ('En revisión', 'review'),
+        Application.Status.ACCEPTED: ('Aceptada', 'accepted'),
+        Application.Status.REJECTED: ('Rechazada', 'rejected'),
+    }
+    application_rows = []
+    for application in applications:
+        status_label, status_class = status_labels.get(
+            application.status,
+            (application.get_status_display(), 'pending'),
+        )
+        opportunity = application.opportunity
+        application_rows.append({
+            'id': application.id,
+            'opportunity_id': opportunity.id,
+            'company': opportunity.company.name,
+            'position': opportunity.title,
+            'status': status_label,
+            'status_class': status_class,
+            'location': opportunity.get_modality_display(),
+            'applied_at': application.created_at.strftime('%d/%m/%Y'),
+            'deadline': opportunity.deadline.strftime('%d/%m/%Y') if opportunity.deadline else '',
+            'description': opportunity.description,
+            'updated_at': application.created_at.strftime('%d/%m/%Y'),
+        })
+
+    return render(request, 'student/my_applications.html', {
+        'applications': application_rows,
+        'total_applications': len(application_rows),
+        'review_count': sum(item['status_class'] == 'review' for item in application_rows),
+        'accepted_count': sum(item['status_class'] == 'accepted' for item in application_rows),
+    })
+
+
+@login_required(login_url='frontend:login')
+def apply_to_opportunity(request, opportunity_id):
+    from internships.models import Application, Opportunity, StudentProfile
+    from institutions.models import Institution, TechnicalCareer
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Solo se permite aplicar mediante POST.'}, status=405)
+
+    opportunity = get_object_or_404(
+        Opportunity,
+        id=opportunity_id,
+        status=Opportunity.Status.ACTIVE,
+    )
+    profile = StudentProfile.objects.filter(user=request.user).first()
+    if profile is None:
+        institution, _ = Institution.objects.get_or_create(name='Plataforma Pública')
+        career, _ = TechnicalCareer.objects.get_or_create(
+            institution=institution,
+            name='General',
+        )
+        profile = StudentProfile.objects.create(
+            user=request.user,
+            institution=institution,
+            career=career,
+            student_code=f'AUTO-{request.user.id}',
+            is_eligible=True,
+        )
+    elif not profile.is_eligible:
+        return JsonResponse({
+            'ok': False,
+            'error': 'Tu perfil aún no está habilitado para postularse.',
+        }, status=400)
+
+    application, created = Application.objects.get_or_create(
+        opportunity=opportunity,
+        student=profile,
+        defaults={'message': request.POST.get('message', '').strip()},
+    )
+    if not created:
+        return JsonResponse({
+            'ok': False,
+            'already_applied': True,
+            'error': 'Ya te postulaste a esta oportunidad.',
+        }, status=409)
+
+    return JsonResponse({
+        'ok': True,
+        'application_id': application.id,
+        'message': 'Postulación enviada correctamente.',
+    }, status=201)
 
 
 @login_required(login_url='frontend:login')
@@ -83,7 +264,9 @@ def my_internships(request):
     try:
         student_profile = getattr(request.user, 'student_profile', None)
         if student_profile:
-            internships = Internship.objects.filter(student=student_profile).select_related('company', 'supervisor', 'application')
+            internships = Internship.objects.filter(student=student_profile).select_related(
+                'company', 'supervisor', 'application__opportunity'
+            )
     except Exception:
         internships = []
     return render(request, 'student/my_internships.html', {'internships': internships})
@@ -92,8 +275,11 @@ def my_internships(request):
 @login_required(login_url='frontend:login')
 def view_internship(request, internship_id):
     from internships.models import Opportunity
-    internship = Opportunity.objects.filter(id=internship_id).first()
-    return render(request, 'student/internship_detail.html', {'internship': internship})
+    opportunity = get_object_or_404(
+        Opportunity.objects.select_related('company', 'institution', 'career'),
+        id=internship_id,
+    )
+    return render(request, 'student/opportunity_detail.html', {'opportunity': opportunity})
 
 
 @login_required(login_url='frontend:login')
@@ -150,7 +336,11 @@ def applicants_view(request, offer_id):
         return redirect('frontend:company-offers')
 
     # Only return real applications stored in DB
-    applications = opp.applications.select_related('student__user').all()
+    applications = opp.applications.select_related(
+        'student__user',
+        'student__institution',
+        'student__career',
+    ).all()
     return render(request, 'company/applicants.html', {'applications': applications, 'offer': opp})
 
 

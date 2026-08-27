@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opportunity.title }} | SkillBridge{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header">
+        <div>
+            <h1 class="card-title">{{ opportunity.title }}</h1>
+            <p class="card-subtitle">
+                <i class="fas fa-building"></i> {{ opportunity.company.name }}
+            </p>
+        </div>
+        <span class="badge badge-primary">{{ opportunity.get_status_display }}</span>
+    </div>
+
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <p><strong>Modalidad:</strong> {{ opportunity.get_modality_display }}</p>
+            <p><strong>Fecha límite:</strong> {{ opportunity.deadline|date:"d/m/Y H:i" }}</p>
+            <p><strong>Área:</strong> {{ opportunity.career.name }}</p>
+            <p><strong>Vacantes:</strong> {{ opportunity.vacancies }}</p>
+        </div>
+
+        <section style="margin-bottom: 1.5rem;">
+            <h2>Descripción</h2>
+            <p style="white-space: pre-line; line-height: 1.7;">{{ opportunity.description }}</p>
+        </section>
+
+        <section style="margin-bottom: 1.5rem;">
+            <h2>Requisitos</h2>
+            {% if opportunity.requirements %}
+                <ul>
+                    {% for requirement in opportunity.requirements %}
+                        <li>{{ requirement }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No se registraron requisitos adicionales.</p>
+            {% endif %}
+        </section>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{% url 'frontend:my-applications' %}" class="btn btn-outline">Volver a mis aplicaciones</a>
+            {% if opportunity.status == 'ACTIVE' %}
+                <a href="{% url 'frontend:student-opportunities' %}" class="btn btn-primary">Ver oportunidades</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
