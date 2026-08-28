@@ -3,130 +3,16 @@
 {% block title %}Aplicantes - {{ offer.title }}{% endblock %}
 
 {% block content %}
-<style>
-  .company-applicants-list .card-body {
-    text-align: center;
-  }
-
-  .company-applicants-list .card-body p {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .company-applicants-list .card-body .btn {
-    justify-content: center;
-  }
-
-  .company-applicant-item {
-    list-style: none;
-  }
-
-  .applicant-details {
-    display: none;
-    width: min(100%, 48rem);
-    box-sizing: border-box;
-    margin: -0.5rem auto 1rem;
-    padding: 1.5rem;
-    border: 1px solid rgba(74, 144, 226, 0.35);
-    border-radius: 0.75rem;
-    background: var(--card-bg, #f8f9fa);
-    text-align: center;
-    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
-  }
-
-  .applicant-details.is-visible {
-    display: block;
-    animation: applicantDetailsIn 240ms ease-out;
-  }
-
-  .applicant-details h2 {
-    margin: 0 0 1rem;
-  }
-
-  .applicant-details p {
-    max-width: 38rem;
-    margin: 0.65rem auto;
-  }
-
-  .applicant-details strong {
-    color: var(--primary-color, #4a90e2);
-  }
-
-  .applicant-details-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1rem;
-  }
-
-  @keyframes applicantDetailsIn {
-    from {
-      opacity: 0;
-      max-height: 0;
-      transform: translateY(-0.5rem);
-    }
-    to {
-      opacity: 1;
-      max-height: 60rem;
-      transform: translateY(0);
-    }
-  }
-
-  @media (max-width: 600px) {
-    .applicant-details {
-      padding: 1rem;
-    }
-  }
-</style>
-
 <h1>Aplicantes para: {{ offer.title }}</h1>
 
 {% if applications and applications|length > 0 %}
   <ul class="company-applicants-list">
     {% for app in applications %}
-      <li class="company-applicant-item">
-        <div class="card mb-2">
+      <li class="card mb-2">
         <div class="card-body">
           <p style="font-weight:600">{{ app.student.user.get_full_name|default:app.student.user.username }}</p>
-          <p class="text-muted">{{ app.student.career.name|default:'Carrera no registrada' }}</p>
           <p class="text-muted">{{ app.message|default:'Sin mensaje' }}</p>
           <p><strong>Estado:</strong> {{ app.get_status_display }}</p>
-          <button type="button" class="btn btn-small btn-primary" aria-expanded="false" aria-controls="applicant-details-{{ app.id }}" onclick="toggleApplicantDetails('applicant-details-{{ app.id }}', this)">
-            <i class="fas fa-user"></i> Ver detalles
-          </button>
-        </div>
-        </div>
-
-        <div id="applicant-details-{{ app.id }}" class="applicant-details" aria-hidden="true">
-          <h2>Detalles del estudiante</h2>
-          <p><strong>Nombre:</strong> {{ app.student.user.get_full_name|default:app.student.user.username }}</p>
-          <p><strong>Correo:</strong> {{ app.student.user.email|default:'No registrado' }}</p>
-          <p><strong>Teléfono:</strong> {{ app.student.phone|default:'No registrado' }}</p>
-          <p><strong>Código estudiantil:</strong> {{ app.student.student_code|default:'No registrado' }}</p>
-          <p><strong>Institución:</strong> {{ app.student.institution.name|default:'No registrada' }}</p>
-          <p><strong>Carrera:</strong> {{ app.student.career.name|default:'No registrada' }}</p>
-          <p><strong>Perfil:</strong> {{ app.student.bio|default:'El estudiante no agregó una descripción.' }}</p>
-          <p><strong>Habilidades:</strong>
-            {% if app.student.skills %}
-              {{ app.student.skills|join:', ' }}
-            {% else %}
-              No registradas
-            {% endif %}
-          </p>
-          <p><strong>Mensaje de postulación:</strong> {{ app.message|default:'Sin mensaje' }}</p>
-          <p><strong>Fecha de postulación:</strong> {{ app.created_at|date:'d/m/Y H:i' }}</p>
-          <div class="applicant-details-actions">
-            {% if app.student.cv %}
-              <a class="btn btn-small btn-outline" href="{{ app.student.cv.url }}" target="_blank" rel="noopener">Ver CV</a>
-            {% endif %}
-            {% if app.student.portfolio %}
-              <a class="btn btn-small btn-outline" href="{{ app.student.portfolio.url }}" target="_blank" rel="noopener">Ver portafolio</a>
-            {% endif %}
-            <button type="button" class="btn btn-small btn-outline" onclick="toggleApplicantDetails('applicant-details-{{ app.id }}')">
-              Ocultar detalles
-            </button>
-          </div>
         </div>
       </li>
     {% endfor %}
@@ -136,20 +22,4 @@
 {% endif %}
 
 <p><a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">Volver a Ofertas</a></p>
-
-<script>
-function toggleApplicantDetails(detailsId, button) {
-  const details = document.getElementById(detailsId);
-  if (!details) return;
-  const isVisible = details.classList.toggle('is-visible');
-  details.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
-  button = button || document.querySelector(`[aria-controls="${detailsId}"]`);
-  if (button) {
-    button.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
-    button.innerHTML = isVisible
-      ? '<i class="fas fa-user"></i> Ocultar detalles'
-      : '<i class="fas fa-user"></i> Ver detalles';
-  }
-}
-</script>
 {% endblock %}

@@ -3,14 +3,12 @@
 {% block title %}Oportunidades de Pasantía | SkillBridge{% endblock %}
 
 {% block content %}
-{{ opportunities_json|json_script:"opportunities-data" }}
-<div class="opportunities-page">
-    <div class="page-header" style="margin-bottom: 2rem;">
-        <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
-            <i class="fas fa-briefcase"></i> Oportunidades de Pasantía
-        </h1>
-        <p style="color: var(--text-secondary);">Encuentra la pasantía perfecta para tu carrera</p>
-    </div>
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+        <i class="fas fa-briefcase"></i> Oportunidades de Pasantía
+    </h1>
+    <p style="color: var(--text-secondary);">Encuentra la pasantía perfecta para tu carrera</p>
+</div>
 
 <!-- FILTROS Y BÚSQUEDA -->
 <div class="card" style="margin-bottom: 2rem;">
@@ -112,7 +110,6 @@
         </div>
 
         <div class="modal-footer">
-            {% csrf_token %}
             <button type="button" class="btn btn-outline" onclick="toggleModal('opportunity-modal', false)">
                 Cerrar
             </button>
@@ -123,350 +120,118 @@
     </div>
 </div>
 
-<div id="app-toast" class="app-toast" role="status" aria-live="polite" aria-atomic="true">
-    <div class="app-toast-icon"><i class="fas fa-check"></i></div>
-    <div class="app-toast-content">
-        <strong id="app-toast-title">Postulación enviada</strong>
-        <span id="app-toast-message"></span>
-    </div>
-    <button type="button" class="app-toast-close" aria-label="Cerrar aviso">&times;</button>
-</div>
-</div>
-
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .opportunities-page {
-        width: min(100%, 1240px);
-        margin: 0 auto;
-    }
-
-    .opportunities-page .page-header {
-        text-align: center;
-    }
-
-    .opportunities-page > .card {
-        padding: 1.25rem;
-        border-radius: 14px;
-    }
-
-    .opportunities-page > .card .form-row:first-child,
-    .opportunities-page > .card .form-row:first-child .form-group {
-        width: 100%;
-    }
-
-    .opportunities-page .opportunity-filters {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
-        align-items: end;
-        gap: 0.85rem;
-        margin-top: 1rem;
-    }
-
-    .opportunities-page .filter-field,
-    .opportunities-page .filter-field .form-select {
-        width: 100%;
-    }
-
-    .opportunities-page #apply-filters {
-        min-height: 42px;
-        justify-content: center;
-        white-space: nowrap;
-    }
-
-    .opportunities-page #opportunities-container {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1.25rem;
-    }
-
-    .opportunities-page #opportunities-container .card {
-        min-width: 0;
-    }
-
-    .opportunities-page > div[style*="justify-content: center"] {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    #opportunity-modal {
-        display: flex;
-        visibility: hidden;
-        opacity: 0;
-        transition: opacity 0.24s ease, visibility 0.24s ease;
-    }
-
-    #opportunity-modal.is-open {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    #opportunity-modal .modal-content {
-        transform: translateY(14px) scale(0.98);
-        transition: transform 0.24s ease;
-    }
-
-    #opportunity-modal.is-open .modal-content {
-        transform: translateY(0) scale(1);
-    }
-
-    .opportunity-card {
-        text-align: center;
-        transform: translateY(0);
-        transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
-    }
-
-    .opportunity-card .card-header,
-    .opportunity-card .card-body {
-        align-items: center;
-    }
-
-    .opportunity-card .card-header {
-        justify-content: center;
-        gap: 1rem;
-    }
-
-    .opportunity-card .card-header > div {
-        flex: 1;
-    }
-
-    .opportunity-card .card-header p,
-    .opportunity-card .card-body > div,
-    .opportunity-card .card-body > p {
-        text-align: center;
-    }
-
-    .opportunity-card .card-body > div:first-child,
-    .opportunity-card .card-body > div:nth-last-child(2),
-    .opportunity-card .card-body > div:last-child {
-        justify-content: center;
-    }
-
-    .opportunity-card .card-body > div:last-child {
-        width: 100%;
-    }
-
-    .opportunity-card .card-body > div:last-child > span {
-        flex: 1;
-    }
-
-    .opportunity-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(62, 160, 255, 0.55);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-    }
-
-    .opportunity-card:active {
-        transform: translateY(-1px) scale(0.995);
-    }
-
-    #opportunities-container .btn,
-    #apply-filters,
-    #prev-page,
-    #next-page {
-        transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
-    }
-
-    #opportunities-container .btn:hover:not(:disabled),
-    #apply-filters:hover:not(:disabled),
-    #prev-page:hover:not(:disabled),
-    #next-page:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
-    }
-
-    #opportunities-container .btn:active:not(:disabled),
-    #apply-filters:active:not(:disabled),
-    #prev-page:active:not(:disabled),
-    #next-page:active:not(:disabled) {
-        transform: translateY(0) scale(0.98);
-    }
-
-    #opportunities-container.is-refreshing {
-        opacity: 0.45;
-        transform: translateY(4px);
-        transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-
-    #opportunities-container {
-        transition: opacity 0.22s ease, transform 0.22s ease;
-    }
-
-    .opportunity-filters .form-select,
-    #search-input {
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    }
-
-    .opportunity-filters .form-select:hover,
-    #search-input:hover {
-        border-color: rgba(62, 160, 255, 0.5);
-    }
-
-    .opportunity-filters .form-select:focus,
-    #search-input:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(62, 160, 255, 0.14);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        #opportunity-modal,
-        #opportunity-modal .modal-content,
-        .opportunity-card,
-        #opportunities-container .btn,
-        #apply-filters,
-        #prev-page,
-        #next-page,
-        #opportunities-container,
-        .opportunity-filters .form-select,
-        #search-input {
-            transition: none;
-        }
-    }
-
-    @media (max-width: 900px) {
-        .opportunities-page .opportunity-filters {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .opportunities-page #apply-filters {
-            width: 100%;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .opportunities-page {
-            width: 100%;
-        }
-
-        .opportunities-page .opportunity-filters,
-        .opportunities-page #opportunities-container {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .app-toast {
-        position: fixed;
-        z-index: 1200;
-        top: 1.25rem;
-        right: 1.25rem;
-        width: min(360px, calc(100vw - 2rem));
-        display: flex;
-        align-items: flex-start;
-        gap: 0.8rem;
-        padding: 1rem 1rem 1rem 0.9rem;
-        color: var(--text-color);
-        background: rgba(15, 23, 36, 0.97);
-        border: 1px solid rgba(62, 160, 255, 0.45);
-        border-left: 4px solid #3ea0ff;
-        border-radius: 14px;
-        box-shadow: 0 14px 35px rgba(0, 0, 0, 0.3);
-        opacity: 0;
-        pointer-events: none;
-        transform: translateX(calc(100% + 2rem));
-        transition: opacity 0.25s ease, transform 0.25s ease;
-    }
-
-    .app-toast.is-visible {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(0);
-    }
-
-    .app-toast.is-error {
-        border-color: rgba(255, 99, 132, 0.5);
-        border-left-color: #ff6384;
-    }
-
-    .app-toast-icon {
-        display: grid;
-        flex: 0 0 30px;
-        width: 30px;
-        height: 30px;
-        place-items: center;
-        color: #a9d7ff;
-        background: rgba(62, 160, 255, 0.16);
-        border-radius: 50%;
-    }
-
-    .is-error .app-toast-icon {
-        color: #ff9db2;
-        background: rgba(255, 99, 132, 0.15);
-    }
-
-    .app-toast-content {
-        display: grid;
-        gap: 0.2rem;
-        flex: 1;
-        line-height: 1.4;
-    }
-
-    .app-toast-content strong {
-        font-size: 0.95rem;
-    }
-
-    .app-toast-content span {
-        color: var(--text-secondary);
-        font-size: 0.86rem;
-    }
-
-    .app-toast-close {
-        padding: 0;
-        color: var(--text-secondary);
-        background: transparent;
-        border: 0;
-        font-size: 1.25rem;
-        line-height: 1;
-        cursor: pointer;
-    }
-
-    .app-toast-close:hover {
-        color: var(--text-color);
-    }
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-const opportunitiesSource = document.getElementById('opportunities-data');
-const MOCK_OPPORTUNITIES = opportunitiesSource ? JSON.parse(opportunitiesSource.textContent) : [];
+const MOCK_OPPORTUNITIES = [
+    {
+        id: 1,
+        position: 'Frontend Developer',
+        company: 'NovaLabs',
+        company_description: 'Startup enfocada en productos digitales para educación y salud.',
+        location: 'Bogotá',
+        location_key: 'bogota',
+        area: 'Frontend',
+        area_key: 'frontend',
+        required_hours: 180,
+        deadline: '2026-09-20T23:59:59Z',
+        description: 'Buscamos desarrollador frontend para crear interfaces modernas y accesibles para nuestra plataforma educativa.',
+        required_skills: ['HTML', 'CSS', 'JavaScript', 'React'],
+        applicants_count: 14,
+        created_at: '2026-08-10T09:00:00Z'
+    },
+    {
+        id: 2,
+        position: 'Backend Engineer',
+        company: 'CloudFrame',
+        company_description: 'Empresa de infraestructura cloud para clientes en LATAM.',
+        location: 'Medellín',
+        location_key: 'medellin',
+        area: 'Backend',
+        area_key: 'backend',
+        required_hours: 200,
+        deadline: '2026-09-18T23:59:59Z',
+        description: 'Desarrollo de APIs, integración con servicios y trabajos con bases de datos relacionales y NoSQL.',
+        required_skills: ['Python', 'Django', 'PostgreSQL', 'REST'],
+        applicants_count: 9,
+        created_at: '2026-08-04T12:00:00Z'
+    },
+    {
+        id: 3,
+        position: 'Data Science Intern',
+        company: 'DataPilot',
+        company_description: 'Equipo de analítica avanzada aplicada a marketing y operaciones.',
+        location: 'Cali',
+        location_key: 'cali',
+        area: 'Data Science',
+        area_key: 'datascience',
+        required_hours: 160,
+        deadline: '2026-09-25T23:59:59Z',
+        description: 'Apoyo en limpieza, análisis y modelado predictivo para soluciones de negocio.',
+        required_skills: ['Python', 'SQL', 'Machine Learning', 'Pandas'],
+        applicants_count: 18,
+        created_at: '2026-08-12T15:30:00Z'
+    },
+    {
+        id: 4,
+        position: 'QA Automation Analyst',
+        company: 'QualityFirst',
+        company_description: 'Consultora de calidad y automatización de software.',
+        location: 'Remoto',
+        location_key: 'remoto',
+        area: 'QA',
+        area_key: 'qa',
+        required_hours: 240,
+        deadline: '2026-09-15T23:59:59Z',
+        description: 'Automatización de pruebas y validación de flujos críticos para productos web.',
+        required_skills: ['Selenium', 'Cypress', 'JavaScript', 'Testing'],
+        applicants_count: 12,
+        created_at: '2026-08-08T10:15:00Z'
+    },
+    {
+        id: 5,
+        position: 'Full Stack Developer',
+        company: 'UrbanStack',
+        company_description: 'Compañía de software para ciudades inteligentes y servicios públicos.',
+        location: 'Barranquilla',
+        location_key: 'barranquilla',
+        area: 'Full Stack',
+        area_key: 'fullstack',
+        required_hours: 180,
+        deadline: '2026-09-30T23:59:59Z',
+        description: 'Participación en desarrollo full stack de aplicaciones internas y servicios web.',
+        required_skills: ['JavaScript', 'Node.js', 'React', 'MongoDB'],
+        applicants_count: 11,
+        created_at: '2026-08-15T08:45:00Z'
+    },
+    {
+        id: 6,
+        position: 'DevOps Intern',
+        company: 'OpsHub',
+        company_description: 'Plataforma de observabilidad y automatización para equipos de tecnología.',
+        location: 'Bogotá',
+        location_key: 'bogota',
+        area: 'DevOps',
+        area_key: 'devops',
+        required_hours: 200,
+        deadline: '2026-09-17T23:59:59Z',
+        description: 'Acompañamiento en despliegues, pipelines CI/CD, monitoreo y soporte de infraestructura.',
+        required_skills: ['Docker', 'Linux', 'GitHub Actions', 'Cloud'],
+        applicants_count: 7,
+        created_at: '2026-08-06T17:10:00Z'
+    }
+];
 
 let currentPage = 1;
 let currentFilters = {};
 let selectedOpportunityId = null;
-let toastTimeout = null;
 
-function showAppToast(message, type = 'success') {
-    const toast = document.getElementById('app-toast');
-    const toastMessage = document.getElementById('app-toast-message');
-    const toastTitle = document.getElementById('app-toast-title');
-    if (!toast || !toastMessage || !toastTitle) return;
-
-    window.clearTimeout(toastTimeout);
-    toast.classList.toggle('is-error', type === 'error');
-    toastTitle.textContent = type === 'error' ? 'No se pudo completar' : 'Postulación enviada';
-    toastMessage.textContent = message;
-    toast.classList.add('is-visible');
-    toastTimeout = window.setTimeout(() => toast.classList.remove('is-visible'), 5000);
-}
-
-document.querySelector('.app-toast-close')?.addEventListener('click', () => {
-    document.getElementById('app-toast')?.classList.remove('is-visible');
-});
-
-function toggleModal(modalId, show) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    modal.classList.toggle('is-open', show);
-    modal.setAttribute('aria-hidden', show ? 'false' : 'true');
-}
-
-window.toggleModal = toggleModal;
 window.SkillBridge = {
     toggleModal(modalId, show) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
-        modal.classList.toggle('is-open', show);
-        modal.setAttribute('aria-hidden', show ? 'false' : 'true');
+        modal.style.display = show ? 'flex' : 'none';
     },
 
     async getOpportunities(filters = {}) {
@@ -545,31 +310,18 @@ window.SkillBridge = {
     },
 
     async applyToOpportunity(opportunityId) {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-        const response = await fetch(`/student/opportunities/${opportunityId}/apply/`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRFToken': csrfToken || ''
-            },
-            credentials: 'same-origin'
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error || 'No se pudo enviar la postulación.');
-        }
-        return data;
+        return true;
     }
 };
 
 async function loadOpportunities() {
-    const container = document.getElementById('opportunities-container');
-    container.classList.add('is-refreshing');
     try {
         const opportunities = await SkillBridge.getOpportunities({
             page: currentPage,
             ...currentFilters
         });
+
+        const container = document.getElementById('opportunities-container');
 
         if (!opportunities || opportunities.results.length === 0) {
             container.innerHTML = `
@@ -579,14 +331,13 @@ async function loadOpportunities() {
                 </div>
             `;
             updatePagination({ current_page: 1, total_pages: 1, previous: false, next: false });
-            requestAnimationFrame(() => container.classList.remove('is-refreshing'));
             return;
         }
 
         let html = '';
         opportunities.results.forEach((opp) => {
             html += `
-                <div class="card opportunity-card" style="cursor: pointer;" onclick="showOpportunityDetails(${opp.id})">
+                <div class="card" style="cursor: pointer; transition: all 0.3s;" onclick="showOpportunityDetails(${opp.id})">
                     <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
                         <div>
                             <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">${opp.position}</h3>
@@ -629,23 +380,18 @@ async function loadOpportunities() {
         });
 
         container.innerHTML = html;
-        requestAnimationFrame(() => container.classList.remove('is-refreshing'));
         updatePagination(opportunities);
     } catch (error) {
         console.error('Error cargando oportunidades:', error);
-        container.classList.remove('is-refreshing');
     }
 }
 
 async function showOpportunityDetails(opportunityId) {
     try {
-        const response = await fetch(`/student/opportunities/${opportunityId}/json/`, {
-            headers: { 'Accept': 'application/json' }
-        });
-        if (!response.ok) {
-            throw new Error(`No se pudo cargar la oportunidad (${response.status})`);
-        }
-        const opp = await response.json();
+        const opportunities = await SkillBridge.getOpportunities();
+        const opp = opportunities.results.find((o) => o.id === opportunityId);
+
+        if (!opp) return;
 
         selectedOpportunityId = opportunityId;
 
@@ -715,37 +461,21 @@ async function applyNow() {
     button.disabled = true;
     button.innerHTML = '<div class="loading"></div> Aplicando...';
 
-    try {
-        const result = await SkillBridge.applyToOpportunity(selectedOpportunityId);
+    const success = await SkillBridge.applyToOpportunity(selectedOpportunityId);
+
+    if (success) {
         SkillBridge.toggleModal('opportunity-modal', false);
         loadOpportunities();
-        showAppToast(result.message);
-    } catch (error) {
-        showAppToast(error.message, 'error');
-    } finally {
-        button.disabled = false;
-        button.innerHTML = '<i class="fas fa-paper-plane"></i> Aplicar Ahora';
     }
+
+    button.disabled = false;
+    button.innerHTML = '<i class="fas fa-paper-plane"></i> Aplicar Ahora';
 }
 
 function updatePagination(data) {
     document.getElementById('page-info').textContent = `Página ${data.current_page} de ${data.total_pages}`;
     document.getElementById('prev-page').disabled = !data.previous;
     document.getElementById('next-page').disabled = !data.next;
-}
-
-const modal = document.getElementById('opportunity-modal');
-if (modal) {
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            toggleModal('opportunity-modal', false);
-        }
-    });
-}
-
-const modalCloseButton = document.querySelector('.modal-close');
-if (modalCloseButton) {
-    modalCloseButton.addEventListener('click', () => toggleModal('opportunity-modal', false));
 }
 
 document.getElementById('apply-filters').addEventListener('click', () => {
