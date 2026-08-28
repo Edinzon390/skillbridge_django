@@ -113,7 +113,7 @@ def _serialize_opportunity_for_frontend(opportunity):
     required_hours = getattr(institution_config, 'required_hours', None) or 160
 
     return {
-        'id': opportunity.id,
+        'id': str(opportunity.id),
         'position': opportunity.title,
         'company': company.name,
         'company_description': company.website or company.address or company.name,

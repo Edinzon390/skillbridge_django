@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from accounts.models import Role, User
+from accounts.models import AuditLog, Role, User
 from companies.models import Company, Supervisor
 from internships.models import Opportunity
 from institutions.models import Institution, TechnicalCareer
@@ -11,6 +11,16 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import json
+
+
+def create_audit_log(user, action, entity, object_id=None, details=None):
+    AuditLog.objects.create(
+        user=user if getattr(user, 'is_authenticated', False) else None,
+        action=action,
+        entity=entity,
+        object_id=str(object_id) if object_id is not None else None,
+        details=details or {},
+    )
 
 
 def get_dashboard_redirect_url(user):
@@ -186,6 +196,7 @@ def create_offer_view(request):
             deadline=deadline_dt or timezone.now() + timezone.timedelta(days=30),
             status=Opportunity.Status.ACTIVE
         )
+        create_audit_log(user, 'CREATE', 'Opportunity', opp.id, {'title': opp.title})
 
         messages.success(request, 'Oferta creada correctamente.')
         return redirect('frontend:company-offers')
@@ -230,6 +241,7 @@ def edit_offer_view(request, offer_id):
             except Exception:
                 pass
         opp.save()
+        create_audit_log(user, 'UPDATE', 'Opportunity', opp.id, {'title': opp.title})
 
         supervisor_email = request.POST.get('supervisor_email', '').strip()
         if supervisor_email:
@@ -467,5 +479,6 @@ def delete_offer_view(request, offer_id):
     # Mark as cancelled to preserve history
     opp.status = Opportunity.Status.CANCELLED
     opp.save()
+    create_audit_log(user, 'CANCEL', 'Opportunity', opp.id, {'title': opp.title})
     messages.success(request, 'Oferta marcada como cancelada.')
     return redirect('frontend:company-offers')
