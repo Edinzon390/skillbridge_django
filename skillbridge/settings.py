@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,9 +9,10 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
+    "django_mongodb_backend",
+    "skillbridge.apps.MongoAdminConfig",
+    "skillbridge.apps.MongoAuthConfig",
+    "skillbridge.apps.MongoContentTypesConfig",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -51,8 +53,12 @@ ASGI_APPLICATION = "skillbridge.asgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django_mongodb_backend",
+        "NAME": os.getenv("MONGODB_DATABASE", "Pasantia"),
+        "HOST": os.getenv(
+            "MONGODB_URI",
+            "mongodb://localhost:27017",
+        ),
     }
 }
 
@@ -73,7 +79,13 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
+
+MIGRATION_MODULES = {
+    "admin": "mongo_migrations.admin",
+    "auth": "mongo_migrations.auth",
+    "contenttypes": "mongo_migrations.contenttypes",
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
