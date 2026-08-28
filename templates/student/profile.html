@@ -101,7 +101,11 @@
     </form>
 </div>
 
-<script>
+<script
+    {% if profile and profile.institution_id %}
+    data-institution-id="{{ profile.institution_id }}"
+    data-career-id="{{ profile.career_id|default:'' }}"
+    {% endif %}>
 document.addEventListener('DOMContentLoaded', function () {
     const institutionSelect = document.getElementById('institution-select');
     const careerSelect = document.getElementById('career-select');
@@ -137,7 +141,12 @@ document.addEventListener('DOMContentLoaded', function () {
         loadCareers(this.value, null);
     });
 
-    loadCareers('{{ profile.institution_id|default:"" }}', '{{ profile.career_id|default:"" }}');
+    // Pre-cargar carreras de la institución ya seleccionada, manteniendo la carrera actual marcada
+    const initialInstitutionId = document.currentScript.dataset.institutionId;
+    const initialCareerId = document.currentScript.dataset.careerId;
+    if (initialInstitutionId) {
+        loadCareers(initialInstitutionId, initialCareerId);
+    }
 });
 </script>
 {% endblock %}
