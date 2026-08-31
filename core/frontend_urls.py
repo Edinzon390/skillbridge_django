@@ -1,6 +1,6 @@
 from django.urls import path
 from . import frontend_views
-from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, delete_offer_view, company_dashboard_json, student_dashboard_json, company_internships_json, company_pending_applicants_json
+from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, delete_offer_view, company_dashboard_json, company_internships_json, company_pending_applicants_json
 
 app_name = 'frontend'
 
@@ -18,7 +18,7 @@ urlpatterns = [
     
     # STUDENT
     path('dashboard/', frontend_views.student_dashboard, name='student-dashboard'),
-    path('dashboard/json/', student_dashboard_json, name='student-dashboard-json'),
+    path('dashboard/json/', frontend_views.student_dashboard_json, name='student-dashboard-json'),
     path('internships/', frontend_views.internships_list, name='internships'),
     path('applications/', frontend_views.my_applications, name='my-applications'),
     path('my-internships/', frontend_views.my_internships, name='my-internships'),
@@ -27,12 +27,14 @@ urlpatterns = [
     path('profile/', frontend_views.student_profile, name='profile'),
     path('student/dashboard/', frontend_views.student_dashboard, name='student-dashboard-alt'),
     path('student/opportunities/', frontend_views.internships_list, name='student-opportunities'),
+    path('student/opportunities/<int:opportunity_id>/apply/', frontend_views.apply_to_opportunity, name='apply-to-opportunity'),
     path('student/opportunities/<int:internship_id>/', frontend_views.view_internship, name='student-opportunity-detail'),
     path('student/applications/', frontend_views.my_applications, name='student-applications'),
     path('student/my-internships/', frontend_views.my_internships, name='student-my-internships'),
     path('student/internship/<int:internship_id>/', frontend_views.view_internship, name='student-internship-detail'),
     path('student/internship/<int:internship_id>/log-hours/', frontend_views.log_hours, name='student-log-hours'),
     path('student/profile/', frontend_views.student_profile, name='student-profile'),
+    path('student/careers/<int:institution_id>/', frontend_views.careers_by_institution_json, name='careers-by-institution'),
     
     # COMPANY
     path('company/dashboard/', frontend_views.company_dashboard, name='company-dashboard'),
@@ -65,7 +67,4 @@ urlpatterns = [
     
     # API
     path('api/user-roles/', frontend_views.get_user_roles, name='api-user-roles'),
-
-    path('student/profile/', frontend_views.student_profile, name='student-profile'),
-    path('student/careers/<int:institution_id>/', frontend_views.careers_by_institution_json, name='careers-by-institution'),
 ]
