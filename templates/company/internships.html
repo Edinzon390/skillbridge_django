@@ -3,27 +3,55 @@
 {% block title %}Pasantías Activas - Empresa{% endblock %}
 
 {% block content %}
-<h1>Pasantías Activas</h1>
+<div class="page-header">
+    <div>
+        <h1> Pasantías Activas</h1>
+        <p>Gestiona y supervisa todas las pasantías en progreso</p>
+    </div>
+</div>
 
 {% if internships and internships|length > 0 %}
-  <ul class="company-internships-list">
+<div class="internships-grid">
     {% for intern in internships %}
-      <li class="card mb-2">
-        <div class="card-body">
-          <p style="font-weight:600">{{ intern.student.user.get_full_name|default:intern.student.user.username }}</p>
-          <p class="text-muted">Posición: {% if intern.application %}{{ intern.application.opportunity.title }}{% else %}--{% endif %}</p>
-          <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
-          <p><strong>Horas trabajadas:</strong> {{ intern.total_hours }}</p>
-          <p class="table-actions">
-            <a class="btn btn-small btn-outline" href="{% url 'frontend:company-internship-detail' intern.id %}">Ver</a>
-            <a class="btn btn-small btn-primary" href="{% url 'frontend:company-internship-evaluate' intern.id %}">Evaluar</a>
-          </p>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{{ intern.student.user.get_full_name|default:intern.student.user.username }}</h3>
+            <span class="badge badge-{{ intern.get_status_display|lower }}">{{ intern.get_status_display }}</span>
         </div>
-      </li>
+        <div class="card-body">
+            <div style="margin-bottom: 1rem;">
+                <p class="text-secondary text-sm">Posición</p>
+                <p class="font-semibold">{% if intern.application %}{{ intern.application.opportunity.title }}{% else %}--{% endif %}</p>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <p class="text-secondary text-sm">Horas trabajadas</p>
+                <p class="font-semibold text-lg">{{ intern.total_hours }}</p>
+            </div>
+
+            <div class="progress-bar" style="margin-bottom: 1.5rem;">
+                <div class="progress-fill" style="width: {{ intern.progress|default:0 }}%; background: linear-gradient(90deg, var(--primary), var(--cyan));"></div>
+            </div>
+
+            <div class="button-group">
+                <a class="btn btn-outline btn-small" href="{% url 'frontend:company-internship-detail' intern.id %}">
+                     Ver
+                </a>
+                <a class="btn btn-primary btn-small" href="{% url 'frontend:company-internship-evaluate' intern.id %}">
+                     Evaluar
+                </a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-  </ul>
+</div>
 {% else %}
-  <p>No hay pasantías activas para tu empresa.</p>
+<div class="placeholder-card">
+    
+    <h3>No hay pasantías activas</h3>
+    <p>Una vez aceptes un candidato, sus pasantías aparecerán aquí.</p>
+    <a href="{% url 'frontend:company-offers' %}" class="btn btn-primary">Ver mis ofertas</a>
+</div>
 {% endif %}
 
 {% endblock %}

@@ -3,94 +3,82 @@
 {% block title %}Dashboard - Empresa | SkillBridge{% endblock %}
 
 {% block content %}
-<div class="page-header" style="margin-bottom: 2rem;">
-    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
-        <i class="fas fa-building"></i> Dashboard Empresarial
-    </h1>
-    <p style="color: var(--text-secondary);">Gestiona tus ofertas de pasantías y candidatos</p>
+<div class="page-header">
+    <div>
+        <h1> Dashboard Empresarial</h1>
+        <p>Gestiona tus ofertas de pasantías y candidatos</p>
+    </div>
 </div>
 
 <!-- ESTADÍSTICAS -->
-<div class="grid grid-4" style="margin-bottom: 2rem;">
+<div class="grid grid-4 grid-2-tablet grid-1-mobile">
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-clipboard-list"></i> Ofertas Activas
-        </div>
-        <div class="stat-value" id="active-offers">0</div>
-        <div class="stat-change positive">
-            Buscando candidatos
-        </div>
+        
+        <p class="stat-label">Ofertas Activas</p>
+        <p class="stat-value" id="active-offers">0</p>
+        <p class="stat-change positive">Buscando candidatos</p>
     </div>
 
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-user-check"></i> Aplicantes
-        </div>
-        <div class="stat-value" id="total-applicants">0</div>
-        <div class="stat-change">
-            <span id="pending-review">0</span> por revisar
-        </div>
+        
+        <p class="stat-label">Aplicantes</p>
+        <p class="stat-value" id="total-applicants">0</p>
+        <p class="stat-change"><span id="pending-review">0</span> por revisar</p>
     </div>
 
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-users-cog"></i> Pasantías Activas
-        </div>
-        <div class="stat-value" id="active-internships">0</div>
-        <div class="stat-change positive">
-            En progreso
-        </div>
+        
+        <p class="stat-label">Pasantías Activas</p>
+        <p class="stat-value" id="active-internships">0</p>
+        <p class="stat-change positive">En progreso</p>
     </div>
 
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-star"></i> Evaluación Promedio
-        </div>
-        <div class="stat-value" id="avg-rating">0</div>
-        <div class="stat-change positive">
-            <i class="fas fa-star"></i> <i class="fas fa-star"></i> <i class="fas fa-star"></i>
-        </div>
+        
+        <p class="stat-label">Evaluación Promedio</p>
+        <p class="stat-value" id="avg-rating">0</p>
+        <p class="stat-change positive">  </p>
     </div>
 </div>
 
 <!-- ACCIONES RÁPIDAS -->
-<div class="card" style="margin-bottom: 2rem;">
+<div class="card" style="margin-top: 2rem; margin-bottom: 2rem;">
     <div class="card-header">
         <h2 class="card-title">
-            <i class="fas fa-bolt"></i> Acciones Rápidas
+             Acciones Rápidas
         </h2>
     </div>
     <div class="card-body">
-        <div class="grid grid-4" style="gap: 1rem;">
+        <div class="grid grid-4 grid-2-tablet grid-1-mobile">
             <a href="{% url 'frontend:create-offer' %}" class="btn btn-primary btn-block">
-                <i class="fas fa-plus"></i> Nueva Oferta
+                 Nueva Oferta
             </a>
             <a href="{% url 'frontend:company-internships' %}" class="btn btn-secondary btn-block">
-                <i class="fas fa-chart-line"></i> Ver Pasantías
+                 Ver Pasantías
             </a>
             <button class="btn btn-outline btn-block" onclick="exportReport()">
-                <i class="fas fa-download"></i> Descargar Reporte
+                 Descargar Reporte
             </button>
             <a href="{% url 'frontend:company-profile' %}" class="btn btn-outline btn-block">
-                <i class="fas fa-cog"></i> Configuración
+                 Configuración
             </a>
         </div>
     </div>
 </div>
 
 <!-- OFERTAS RECIENTES -->
-<div class="grid grid-2">
+<div class="grid grid-2 grid-1-mobile">
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-briefcase"></i> Mis Ofertas
+                 Mis Ofertas
             </h2>
             <a href="{% url 'frontend:company-offers' %}" class="btn btn-primary btn-small">Ver todas</a>
         </div>
         <div class="card-body" id="my-offers">
             <div style="text-align: center; padding: 2rem;">
                 <div class="loading"></div>
-                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando ofertas...</p>
+                <p style="margin-top: 1rem;">Cargando ofertas...</p>
             </div>
         </div>
     </div>
@@ -99,14 +87,14 @@
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-inbox"></i> Aplicantes Pendientes
+                 Aplicantes Pendientes
             </h2>
             <a href="{% url 'frontend:applicants' %}" class="btn btn-primary btn-small">Ver todos</a>
         </div>
         <div class="card-body" id="pending-applicants">
             <div style="text-align: center; padding: 2rem;">
                 <div class="loading"></div>
-                <p style="margin-top: 1rem; color: var(--text-secondary);">Cargando aplicantes...</p>
+                <p style="margin-top: 1rem;">Cargando aplicantes...</p>
             </div>
         </div>
     </div>
@@ -116,29 +104,31 @@
 <div class="card" style="margin-top: 2rem;">
     <div class="card-header">
         <h2 class="card-title">
-            <i class="fas fa-graduation-cap"></i> Pasantías en Progreso
+             Pasantías en Progreso
         </h2>
     </div>
     <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Estudiante</th>
-                    <th>Posición</th>
-                    <th>Inicio</th>
-                    <th>Fin Esperado</th>
-                    <th>Horas</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="active-internships-table">
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 2rem;">
-                        <div class="loading"></div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Posición</th>
+                        <th>Inicio</th>
+                        <th>Fin Esperado</th>
+                        <th>Horas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="active-internships-table">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem;">
+                            <div class="loading"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -146,28 +136,28 @@
 <div class="card" style="margin-top: 2rem;">
     <div class="card-header">
         <h2 class="card-title">
-            <i class="fas fa-chart-bar"></i> Métricas de Desempeño
+             Métricas de Desempeño
         </h2>
     </div>
     <div class="card-body">
-        <div class="grid grid-2">
+        <div class="grid grid-2 grid-1-mobile">
             <div>
-                <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600;">
+                <p class="font-semibold text-secondary" style="margin-bottom: 0.5rem;">
                     Tasa de Aceptación de Ofertas
                 </p>
-                <div style="background: var(--light-bg); border-radius: 0.5rem; height: 10px; overflow: hidden;" id="acceptance-bar">
-                    <div class="fill" style="background: var(--primary-color); height: 100%; width: 0%; transition: width 400ms ease;"></div>
+                <div class="progress-bar" id="acceptance-bar">
+                    <div class="progress-fill" style="background: linear-gradient(90deg, var(--primary), var(--cyan)); width: 0%; transition: width 400ms ease;"></div>
                 </div>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;" id="acceptance-text">0% (0 de 0 aplicaciones aceptadas)</p>
+                <p class="text-secondary text-sm" style="margin-top: 0.3rem;" id="acceptance-text">0% (0 de 0 aplicaciones aceptadas)</p>
             </div>
             <div>
-                <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600;">
+                <p class="font-semibold text-secondary" style="margin-bottom: 0.5rem;">
                     Satisfacción de Estudiantes
                 </p>
-                <div style="background: var(--light-bg); border-radius: 0.5rem; height: 10px; overflow: hidden;">
-                    <div style="background: var(--success-color); height: 100%; width: 88%;"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="background: linear-gradient(90deg, var(--success), var(--cyan)); width: 88%;"></div>
                 </div>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">4.4/5 estrellas</p>
+                <p class="text-secondary text-sm" style="margin-top: 0.3rem;">4.4/5 estrellas</p>
             </div>
         </div>
     </div>

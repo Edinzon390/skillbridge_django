@@ -2,36 +2,64 @@
 {% block title %}Mis ofertas - Empresa{% endblock %}
 
 {% block content %}
-<h1>Mis ofertas</h1>
+<div class="page-header">
+    <div>
+        <h1> Mis Ofertas</h1>
+        <p>Gestiona todas tus ofertas de pasantía</p>
+    </div>
+    <a href="{% url 'frontend:create-offer' %}" class="btn btn-primary">
+         Nueva Oferta
+    </a>
+</div>
 
 {% if offers %}
-  <div class="company-offers-list">
+<div class="offers-list">
     {% for offer in offers %}
-        <div class="card mb-2">
-          <div class="card-body">
-            <h3 class="card-title">{{ offer.title }}</h3>
-            <p class="text-muted">{{ offer.description|truncatechars:200 }}</p>
-            <p><strong>Modalidad:</strong> {{ offer.get_modality_display }}</p>
-            <p class="table-actions">
-              <a class="btn btn-small btn-outline" href="{% url 'frontend:edit-offer' offer.id %}">Editar</a>
-              <a class="btn btn-small btn-white" href="{% url 'frontend:company-offer-detail' offer.id %}">Ver</a>
-              <a class="btn btn-small btn-secondary" href="{% url 'frontend:company-offer-applicants' offer.id %}" {% if not offer.applications.count or offer.status == 'CANCELLED' %}style="opacity:0.6; pointer-events:none"{% endif %}>Ver Aplicantes</a>
-              {% if offer.status != 'CANCELLED' %}
-              <form method="post" action="{% url 'frontend:delete-offer' offer.id %}" style="display:inline">
-                {% csrf_token %}
-                <button class="btn btn-small btn-danger" type="submit" onclick="return confirm('¿Cancelar esta oferta? Esta acción marcará la oferta como cancelada.')">Cancelar</button>
-              </form>
-              {% else %}
-              <span class="badge badge-warning">Cancelada</span>
-              {% endif %}
-            </p>
-          </div>
+    <div class="card offer-item">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">{{ offer.title }}</h3>
+                <p class="text-secondary text-sm">Modalidad: {{ offer.get_modality_display }}</p>
+            </div>
+            {% if offer.status == 'CANCELLED' %}
+            <span class="badge badge-warning">Cancelada</span>
+            {% else %}
+            <span class="badge badge-success">Activa</span>
+            {% endif %}
         </div>
-      {% endfor %}
+        <div class="card-body">
+            <p class="text-secondary" style="margin-bottom: 1rem;">{{ offer.description|truncatechars:200 }}</p>
+            
+            <div class="button-group">
+                <a class="btn btn-primary btn-small" href="{% url 'frontend:company-offer-detail' offer.id %}">
+                     Ver
+                </a>
+                {% if offer.status != 'CANCELLED' %}
+                <a class="btn btn-outline btn-small" href="{% url 'frontend:edit-offer' offer.id %}">
+                     Editar
+                </a>
+                <a class="btn btn-secondary btn-small" href="{% url 'frontend:company-offer-applicants' offer.id %}">
+                     Aplicantes ({{ offer.applications.count }})
+                </a>
+                <form method="post" action="{% url 'frontend:delete-offer' offer.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-small" type="submit" onclick="return confirm('¿Cancelar esta oferta? Esta acción marcará la oferta como cancelada.')">
+                         Cancelar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% else %}
-  <p>No hay ofertas publicadas todavía.</p>
-  <p><a class="btn" href="{% url 'frontend:create-offer' %}">Crear nueva oferta</a></p>
+<div class="placeholder-card">
+    
+    <h3>No hay ofertas publicadas</h3>
+    <p>Crea tu primera oferta de pasantía para empezar a recibir aplicaciones de estudiantes.</p>
+    <a href="{% url 'frontend:create-offer' %}" class="btn btn-primary">Crear nueva oferta</a>
+</div>
 {% endif %}
 
 {% endblock %}

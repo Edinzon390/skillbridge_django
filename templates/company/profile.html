@@ -3,9 +3,11 @@
 {% block title %}Perfil de Empresa | SkillBridge{% endblock %}
 
 {% block content %}
-<div class="page-header" style="margin-bottom: 1.5rem;">
-    <h1 style="font-size: 1.75rem;"><i class="fas fa-building"></i> Perfil de la Empresa</h1>
-    <p style="color: var(--text-secondary);">Edita la información de tu empresa para mostrarla en las ofertas.</p>
+<div class="page-header">
+    <div>
+        <h1> Perfil de la Empresa</h1>
+        <p>Edita la información de tu empresa para mostrarla en las ofertas.</p>
+    </div>
 </div>
 
 <div style="max-width: 900px;">
@@ -39,9 +41,13 @@
                 <input type="text" name="address" class="form-input" value="{{ company.address }}">
             </div>
 
-            <div style="display:flex; gap:1rem; margin-top:1rem;">
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                <a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">Volver a Ofertas</a>
+            <div class="button-group" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">
+                     Guardar Cambios
+                </button>
+                <a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">
+                     Volver a Ofertas
+                </a>
             </div>
         </div>
     </form>

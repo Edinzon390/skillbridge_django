@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header" style="margin-bottom: 2rem;">
     <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
-        <i class="fas fa-plus-circle"></i> Crear Nueva Oferta
+         Crear Nueva Oferta
     </h1>
     <p style="color: var(--text-secondary);">Publica una nueva oportunidad de pasantía para estudiantes</p>
 </div>
@@ -17,7 +17,7 @@
         <!-- INFORMACIÓN BÁSICA -->
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-info-circle"></i> Información Básica
+                 Información Básica
             </h2>
         </div>
 
@@ -32,9 +32,9 @@
                     name="position" 
                     class="form-input"
                     placeholder="Ej: Pasante de Desarrollo Frontend"
-                                    value="{{ offer.title|default:'' }}"
-                                    required
-                                >
+                    value="{{ offer.title|default:'' }}"
+                    required
+                >
             </div>
 
             <div class="form-group">
@@ -47,8 +47,8 @@
                     class="form-textarea"
                     placeholder="Describe en detalle las responsabilidades y tareas del pasante..."
                     required
-                                >{{ offer.description|default:'' }}</textarea>
-                <div class="form-help">Mínimo 100 caracteres</div>
+                >{{ offer.description|default:'' }}</textarea>
+                <div class="form-help">Mínimo 100 caracteres para una descripción completa</div>
             </div>
 
             <div class="form-row">
@@ -62,9 +62,9 @@
                         name="location" 
                         class="form-input"
                         placeholder="Ej: Bogotá, Colombia"
-                                            value="{{ offer.location|default:'' }}"
-                                            required
-                                        >
+                        value="{{ offer.location|default:'' }}"
+                        required
+                    >
                 </div>
 
                 <div class="form-group">
@@ -72,10 +72,10 @@
                         Tipo de Ubicación <span class="required">*</span>
                     </label>
                     <select id="location_type" name="location_type" class="form-select" required>
-                        <option value="">Selecciona...</option>
-                                            <option value="on-site" {% if offer.location_type == 'on-site' %}selected{% endif %}>Presencial</option>
-                                            <option value="remote" {% if offer.location_type == 'remote' %}selected{% endif %}>Remoto</option>
-                                            <option value="hybrid" {% if offer.location_type == 'hybrid' %}selected{% endif %}>Híbrido</option>
+                        <option value="">Selecciona una opción...</option>
+                        <option value="on-site" {% if offer.location_type == 'on-site' %}selected{% endif %}>Presencial</option>
+                        <option value="remote" {% if offer.location_type == 'remote' %}selected{% endif %}>Remoto</option>
+                        <option value="hybrid" {% if offer.location_type == 'hybrid' %}selected{% endif %}>Híbrido</option>
                     </select>
                 </div>
             </div>
@@ -86,15 +86,15 @@
                         Área <span class="required">*</span>
                     </label>
                     <select id="area" name="area" class="form-select" required>
-                        <option value="">Selecciona...</option>
-                                            <option value="frontend" {% if offer.area == 'frontend' %}selected{% endif %}>Frontend</option>
-                                            <option value="backend" {% if offer.area == 'backend' %}selected{% endif %}>Backend</option>
-                                            <option value="fullstack" {% if offer.area == 'fullstack' %}selected{% endif %}>Full Stack</option>
-                                            <option value="devops" {% if offer.area == 'devops' %}selected{% endif %}>DevOps</option>
-                                            <option value="qa" {% if offer.area == 'qa' %}selected{% endif %}>QA</option>
-                                            <option value="datascience" {% if offer.area == 'datascience' %}selected{% endif %}>Data Science</option>
-                                            <option value="mobile" {% if offer.area == 'mobile' %}selected{% endif %}>Mobile</option>
-                                            <option value="other" {% if offer.area == 'other' %}selected{% endif %}>Otra</option>
+                        <option value="">Selecciona una opción...</option>
+                        <option value="frontend" {% if offer.area == 'frontend' %}selected{% endif %}>Frontend</option>
+                        <option value="backend" {% if offer.area == 'backend' %}selected{% endif %}>Backend</option>
+                        <option value="fullstack" {% if offer.area == 'fullstack' %}selected{% endif %}>Full Stack</option>
+                        <option value="devops" {% if offer.area == 'devops' %}selected{% endif %}>DevOps</option>
+                        <option value="qa" {% if offer.area == 'qa' %}selected{% endif %}>QA</option>
+                        <option value="datascience" {% if offer.area == 'datascience' %}selected{% endif %}>Data Science</option>
+                        <option value="mobile" {% if offer.area == 'mobile' %}selected{% endif %}>Mobile</option>
+                        <option value="other" {% if offer.area == 'other' %}selected{% endif %}>Otra</option>
                     </select>
                 </div>
 
@@ -108,12 +108,12 @@
                         name="required_hours" 
                         class="form-input"
                         placeholder="160, 180, 200, etc."
-                                            value="{{ offer.required_hours|default:'' }}"
-                                            min="160"
-                                            max="500"
-                                            step="10"
-                                            required
-                                        >
+                        value="{{ offer.required_hours|default:'' }}"
+                        min="160"
+                        max="500"
+                        step="10"
+                        required
+                    >
                 </div>
             </div>
 
@@ -126,17 +126,17 @@
                     id="deadline" 
                     name="deadline" 
                     class="form-input"
-                                    value="{{ offer.deadline|date:'Y-m-d'|default:'' }}"
-                                    required
-                                >
-                <div class="form-help">Cuando ya no se aceptarán aplicaciones</div>
+                    value="{{ offer.deadline|date:'Y-m-d'|default:'' }}"
+                    required
+                >
+                <div class="form-help">Cuando ya no se aceptarán nuevas aplicaciones</div>
             </div>
         </div>
 
         <!-- HABILIDADES REQUERIDAS -->
         <div class="card-header" style="margin-top: 2rem;">
             <h2 class="card-title">
-                <i class="fas fa-code"></i> Habilidades Requeridas
+                 Habilidades Requeridas
             </h2>
         </div>
 
@@ -149,7 +149,7 @@
                     id="required_skills" 
                     name="required_skills" 
                     class="form-textarea"
-                    placeholder="Ingresa las habilidades separadas por comas&#10;Ej: HTML, CSS, JavaScript, React, Git"
+                    placeholder="HTML, CSS, JavaScript, React, Git"
                     required
                 ></textarea>
                 <div class="form-help">Ingresa cada habilidad separada por coma</div>
@@ -157,7 +157,31 @@
 
             <div class="form-group">
                 <label for="nice_to_have" class="form-label">
-                    Habilidades Preferibles (No requeridas)
+                    Habilidades Preferibles (Opcionales)
+                </label>
+                <textarea 
+                    id="nice_to_have" 
+                    name="nice_to_have" 
+                    class="form-textarea"
+                    placeholder="TypeScript, Docker, Kubernetes"
+                ></textarea>
+                <div class="form-help">Habilidades que no son obligatorias pero sí deseables</div>
+            </div>
+        </div>
+
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="card-body" style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">
+                 Publicar Oferta
+            </button>
+            <a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">
+                 Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
                 </label>
                 <textarea 
                     id="nice_to_have" 
@@ -171,7 +195,7 @@
         <!-- BENEFICIOS -->
         <div class="card-header" style="margin-top: 2rem;">
             <h2 class="card-title">
-                <i class="fas fa-gift"></i> Beneficios
+                 Beneficios
             </h2>
         </div>
 
@@ -229,7 +253,7 @@
         <!-- SUPERVISOR -->
         <div class="card-header" style="margin-top: 2rem;">
             <h2 class="card-title">
-                <i class="fas fa-user-tie"></i> Supervisor de Pasantía
+                 Supervisor de Pasantía
             </h2>
         </div>
 
@@ -281,7 +305,7 @@
         <!-- CONTACTO ADICIONAL -->
         <div class="card-header" style="margin-top: 2rem;">
             <h2 class="card-title">
-                <i class="fas fa-envelope"></i> Información de Contacto
+                 Información de Contacto
             </h2>
         </div>
 
@@ -317,13 +341,13 @@
         <!-- ACCIONES -->
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
             <button type="button" class="btn btn-outline" onclick="window.history.back()">
-                <i class="fas fa-arrow-left"></i> Cancelar
+                 Cancelar
             </button>
             <button type="reset" class="btn btn-outline">
-                <i class="fas fa-redo"></i> Limpiar
+                 Limpiar
             </button>
             <button type="submit" class="btn btn-primary" style="margin-left: auto;">
-                <i class="fas fa-check"></i> Publicar Oferta
+                 Publicar Oferta
             </button>
         </div>
     </form>

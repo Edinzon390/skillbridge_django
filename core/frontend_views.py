@@ -73,7 +73,35 @@ def internships_list(request):
 
 @login_required(login_url='frontend:login')
 def my_applications(request):
-    return render(request, 'student/my_applications.html')
+    from internships.models import Application
+    applications = []
+    total = 0
+    review_count = 0
+    accepted_count = 0
+    try:
+        student_profile = getattr(request.user, 'student_profile', None)
+        if student_profile:
+            qs = Application.objects.filter(student=student_profile).select_related('opportunity__company')
+            applications = []
+            for a in qs:
+                applications.append({
+                    'id': a.id,
+                    'company': a.opportunity.company.name if a.opportunity and a.opportunity.company else '',
+                    'position': a.opportunity.title if a.opportunity else '',
+                    'description': a.opportunity.description[:240] if a.opportunity else '',
+                    'location': getattr(a.opportunity, 'location', '') if a.opportunity else '',
+                    'status': a.get_status_display(),
+                    'status_class': a.status.lower(),
+                    'applied_at': a.created_at,
+                    'deadline': a.opportunity.deadline if a.opportunity else None,
+                    'updated_at': a.created_at,
+                })
+            total = qs.count()
+            review_count = qs.filter(status=Application.Status.REVIEW).count()
+            accepted_count = qs.filter(status=Application.Status.ACCEPTED).count()
+    except Exception:
+        applications = []
+    return render(request, 'student/my_applications.html', {'applications': applications, 'total_applications': total, 'review_count': review_count, 'accepted_count': accepted_count})
 
 
 @login_required(login_url='frontend:login')

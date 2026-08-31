@@ -1,51 +1,85 @@
 {% extends "base.html" %}
 
-{% block title %}Ayuda - SkillBridge{% endblock %}
+{% block title %}Centro de Ayuda - SkillBridge{% endblock %}
 
 {% block public_content %}
 <div class="auth-container" style="min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 2rem;">
-    <div class="card" style="max-width: 780px; width: 100%;">
+    <div class="card" style="max-width: 680px; width: 100%;">
         <div class="card-header">
-            <h1 class="card-title"><i class="fas fa-circle-question"></i> Centro de ayuda</h1>
-            <p class="card-subtitle">Todo lo que necesitas saber para usar SkillBridge.</p>
+            <h1 class="card-title" style="margin-bottom: 0.3rem;"> Centro de Ayuda</h1>
+            <p class="card-subtitle">Todo lo que necesitas saber para usar SkillBridge</p>
         </div>
         <div class="card-body">
-            <div class="form-group">
-                <h3 style="margin-bottom: 0.75rem;">¿Cómo comenzar?</h3>
-                <p>Inicia sesión con las credenciales de prueba, navega por el panel y explora las secciones de estudiante, empresa o administración.</p>
+            <div style="margin-bottom: 1.75rem;">
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 700;">
+                     ¿Cómo comenzar?
+                </h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;">Inicia sesión con las credenciales de prueba, navega por el panel y explora las secciones de estudiante, empresa o administración. Cada rol tiene funcionalidades específicas diseñadas para tu necesidad.</p>
             </div>
-            <div class="form-group">
-                <h3 style="margin-bottom: 0.75rem;">Soporte</h3>
-                <p>Si tienes problemas con la plataforma, revisa la documentación del proyecto o contacta al equipo de soporte.</p>
+            
+            <div style="margin-bottom: 1.75rem;">
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 700;">
+                     Preguntas Frecuentes
+                </h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;"><strong>¿Cómo publico una oferta?</strong> Si eres empresa, ve a "Mis Ofertas" y haz clic en "Nueva Oferta". Completa los detalles y publícala.</p>
+                <p style="color: var(--text-secondary); line-height: 1.6;"><strong>¿Cómo me registro como estudiante?</strong> En la página de registro, selecciona "Estudiante" e ingresa tus datos básicos.</p>
+                <p style="color: var(--text-secondary); line-height: 1.6;"><strong>¿Cómo reporto un problema?</strong> Usa el formulario de contacto o envía un email al equipo de soporte.</p>
             </div>
-            <a href="{% url 'frontend:login' %}" class="btn btn-primary">Ir al inicio de sesión</a>
 
-            <!-- Chatbot widget trigger -->
-            <div id="chatbot-widget" aria-hidden="false"></div>
+            <div style="margin-bottom: 1.75rem;">
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 700;">
+                     Soporte
+                </h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;">Si tienes problemas con la plataforma, revisa la documentación del proyecto o contacta al equipo de soporte. Estamos disponibles para ayudarte.</p>
+            </div>
+
+            <div style="background: var(--bg-secondary); padding: 1.2rem; border-radius: 14px; border-left: 4px solid var(--primary);">
+                <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+                     <strong>Tip:</strong> Para una mejor experiencia, te recomendamos usar la última versión de tu navegador.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.75rem; flex-wrap: wrap;">
+                <a href="{% url 'frontend:login' %}" class="btn btn-primary">
+                     Ir al inicio de sesión
+                </a>
+                <a href="{% url 'frontend:register' %}" class="btn btn-secondary">
+                     Crear cuenta
+                </a>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 980px; margin: 1rem auto;">
-    <div class="card-header">
-        <h1 class="card-title"><i class="fas fa-circle-question"></i> Centro de ayuda</h1>
-        <p class="card-subtitle">Todo lo que necesitas saber para usar SkillBridge.</p>
-    </div>
-    <div class="card-body">
-        <div class="form-group">
-            <h3 style="margin-bottom: 0.75rem;">¿Cómo comenzar?</h3>
-            <p>Inicia sesión con las credenciales de prueba, navega por el panel y explora las secciones de estudiante, empresa o administración.</p>
+<div style="max-width: 900px; margin: 2rem auto; padding: 0 1rem;">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title"> Centro de Ayuda</h1>
+            <p class="card-subtitle">Todo lo que necesitas saber para usar SkillBridge</p>
         </div>
-        <div class="form-group">
-            <h3 style="margin-bottom: 0.75rem;">Soporte</h3>
-            <p>Si tienes problemas con la plataforma, revisa la documentación del proyecto o contacta al equipo de soporte.</p>
+        <div class="card-body">
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 700;">
+                     ¿Cómo comenzar?
+                </h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;">Inicia sesión con las credenciales de prueba, navega por el panel y explora las secciones de estudiante, empresa o administración.</p>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 700;">
+                     Preguntas Frecuentes
+                </h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;"><strong>¿Cómo publico una oferta?</strong> Si eres empresa, ve a "Mis Ofertas" y haz clic en "Nueva Oferta". Completa los detalles y publícala.</p>
+                <p style="color: var(--text-secondary); line-height: 1.6;"><strong>¿Cómo me registro?</strong> En la página de registro, selecciona tu rol (Estudiante o Empresa) e ingresa tus datos.</p>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 700;">
+                     Soporte
+                </h3>
+                <p style="color: var(--text-secondary); line-height: 1.6;">Si tienes problemas con la plataforma, revisa la documentación del proyecto o contacta al equipo de soporte.</p>
+            </div>
         </div>
-        <a href="{% url 'frontend:login' %}" class="btn btn-primary">Ir al inicio de sesión</a>
-
-        <!-- Chatbot widget trigger -->
-        <div id="chatbot-widget" aria-hidden="false"></div>
     </div>
 </div>
 {% endblock %}

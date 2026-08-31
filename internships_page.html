@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <img src="/static/images/logo.svg" alt="SkillBridge" class="brand-logo" />
+                <span class="sr-only">SkillBridge</span>
+            </a>
+
+            <ul class="navbar-menu">
+                <li><a href="/">Inicio</a></li>
+                
+            </ul>
+
+            <div class="navbar-user">
+                <button id="theme-toggle" class="btn btn-outline btn-small" title="Cambiar tema">☀️</button>
+                
+                    <a href="/login/" class="logout-btn">Iniciar Sesión</a>
+                
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    
+        
+<div class="auth-container" style="min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);">
+    <div class="card" style="max-width: 400px; width: 90%;">
+        <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+            <div style="text-align: center; width: 100%;">
+                <h1 class="card-title" style="margin-bottom: 0.5rem;">
+                    <i class="fas fa-graduation-cap"></i> SkillBridge
+                </h1>
+                <p class="card-subtitle">Plataforma de Gestión de Pasantías</p>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding-top: 2rem;">
+            
+
+            <form method="post" class="form-group">
+                <input type="hidden" name="csrfmiddlewaretoken" value="0hnNdNP0pakO8gGeckoFo4vnOE6lL9AppoQx4xhoG3Lvrv20PuGgTWvjY5r77nPC">
+
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user"></i> Usuario o Email
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input"
+                        placeholder="Ingresa tu usuario o email"
+                        required
+                        autofocus
+                    >
+                    
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i> Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="Ingresa tu contraseña"
+                        required
+                    >
+                    
+                </div>
+
+                <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 400;">
+                        <input type="checkbox" name="remember" id="remember">
+                        Recuérdame
+                    </label>
+                    <a href="/password-reset/" style="color: var(--primary-color); text-decoration: none;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    ¿No tienes cuenta? <a href="/register/" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Regístrate aquí</a>
+                </p>
+            </div>
+
+            <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; font-size: 0.85rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    <strong>Credenciales de prueba:</strong>
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 1rem;">
+                    <li>Estudiante: <code>student@example.com</code></li>
+                    <li>Empresa: <code>company@example.com</code></li>
+                    <li>Admin: <code>admin@example.com</code></li>
+                    <li>Contraseña: <code>Demo@123</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    code {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.3rem;
+        font-family: 'Courier New', monospace;
+    }
+</style>
+
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    
+</body>
+</html>
+

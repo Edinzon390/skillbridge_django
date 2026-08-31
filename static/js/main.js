@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
+  var navMenu = document.querySelector('.navbar-menu');
+  var navToggle = document.querySelector('.mobile-nav-toggle');
+
+  if(navToggle && navMenu){
+    navToggle.addEventListener('click', function(){
+      navMenu.classList.toggle('is-open');
+      navToggle.setAttribute('aria-expanded', navMenu.classList.contains('is-open') ? 'true' : 'false');
+    });
+  }
+
   // Theme toggle: busca preferencia en localStorage o en el atributo data-theme
   var current = localStorage.getItem('site-theme') || document.documentElement.getAttribute('data-theme') || 'light';
   applyTheme(current);
@@ -22,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function applyTheme(name){
     if(name === 'dark'){
-      // add dark stylesheet if not present
       if(!document.getElementById('theme-dark-css')){
         var l = document.createElement('link');
         l.rel = 'stylesheet';
@@ -30,19 +39,12 @@ document.addEventListener('DOMContentLoaded', function(){
         l.id = 'theme-dark-css';
         document.head.appendChild(l);
       }
-      document.documentElement.setAttribute('data-theme','dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       var e = document.getElementById('theme-dark-css');
       if(e) e.parentNode.removeChild(e);
-      document.documentElement.setAttribute('data-theme','light');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
-    // update toggle label if exists
     if(toggle) toggle.textContent = (name === 'dark') ? '🌙' : '☀️';
-  }
-
-  // Simple mobile menu toggle si se requiere más tarde
-  var nav = document.querySelector('.navbar');
-  if(nav){
-    // placeholder: se puede añadir comportamiento de menú móvil
   }
 });

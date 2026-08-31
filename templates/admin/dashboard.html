@@ -3,29 +3,31 @@
 {% block title %}Dashboard Administrativo | SkillBridge{% endblock %}
 
 {% block content %}
-<div class="page-header" style="margin-bottom: 2rem;">
-    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
-        <i class="fas fa-tachometer-alt"></i> Panel Administrativo
-    </h1>
-    <p style="color: var(--text-secondary);">Monitoreo integral del sistema de pasantías</p>
+<div class="page-header">
+    <div>
+        <h1> Panel Administrativo</h1>
+        <p>Monitoreo integral del sistema de pasantías</p>
+    </div>
 </div>
 
 <!-- FILTROS -->
-<div class="card" style="margin-bottom: 2rem;">
+<div class="card filters-card" style="margin-bottom: 2rem;">
     <div class="form-row">
-        <div class="form-group" style="margin-bottom: 0;">
+        <div class="form-group" style="grid-column: 1 / -1;">
             <input type="text" class="form-input" placeholder="Buscar estudiante, empresa o pasantía...">
         </div>
-        <div class="form-group" style="margin-bottom: 0;">
-            <select class="form-select">
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <select class="form-input">
                 <option>Todos los estados</option>
                 <option>En progreso</option>
                 <option>Completadas</option>
                 <option>Canceladas</option>
             </select>
         </div>
-        <div class="form-group" style="margin-bottom: 0;">
-            <select class="form-select">
+        <div class="form-group">
+            <select class="form-input">
                 <option>Últimos 30 días</option>
                 <option>Últimos 60 días</option>
                 <option>Últimos 90 días</option>
@@ -33,61 +35,49 @@
             </select>
         </div>
         <button class="btn btn-primary" style="align-self: flex-end;">
-            <i class="fas fa-search"></i> Filtrar
+             Filtrar
         </button>
     </div>
 </div>
 
 <!-- ESTADÍSTICAS PRINCIPALES -->
-<div class="grid grid-4" style="margin-bottom: 2rem;">
+<div class="grid grid-4 grid-2-tablet grid-1-mobile">
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-graduation-cap"></i> Estudiantes Activos
-        </div>
-        <div class="stat-value" id="active-students">0</div>
-        <div class="stat-change positive">
-            <i class="fas fa-arrow-up"></i> +15% este mes
-        </div>
+        
+        <p class="stat-label">Estudiantes Activos</p>
+        <p class="stat-value" id="active-students">0</p>
+        <p class="stat-change positive"> +15% este mes</p>
     </div>
 
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-building"></i> Empresas Validadas
-        </div>
-        <div class="stat-value" id="validated-companies">0</div>
-        <div class="stat-change">
-            <span id="pending-companies">0</span> por validar
-        </div>
+        
+        <p class="stat-label">Empresas Validadas</p>
+        <p class="stat-value" id="validated-companies">0</p>
+        <p class="stat-change"><span id="pending-companies">0</span> por validar</p>
     </div>
 
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-briefcase"></i> Pasantías Totales
-        </div>
-        <div class="stat-value" id="total-internships">0</div>
-        <div class="stat-change">
-            <span id="active-internships-count">0</span> activas
-        </div>
+        
+        <p class="stat-label">Pasantías Totales</p>
+        <p class="stat-value" id="total-internships">0</p>
+        <p class="stat-change"><span id="active-internships-count">0</span> activas</p>
     </div>
 
     <div class="stat-card">
-        <div class="stat-label">
-            <i class="fas fa-check-circle"></i> Tasa Completación
-        </div>
-        <div class="stat-value" id="completion-rate">0%</div>
-        <div class="stat-change positive">
-            Meta: 85%
-        </div>
+        
+        <p class="stat-label">Tasa Completación</p>
+        <p class="stat-value" id="completion-rate">0%</p>
+        <p class="stat-change positive">Meta: 85%</p>
     </div>
 </div>
 
 <!-- GRÁFICOS Y ANÁLISIS -->
-<div class="grid grid-2" style="margin-bottom: 2rem;">
+<div class="grid grid-2 grid-1-mobile" style="margin-top: 2rem; margin-bottom: 2rem;">
     <!-- PASANTÍAS POR ESTADO -->
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-chart-pie"></i> Pasantías por Estado
+                 Pasantías por Estado
             </h2>
         </div>
         <div class="card-body">
@@ -97,19 +87,19 @@
             <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span>En Progreso</span>
-                    <strong style="color: var(--primary-color);">45</strong>
+                    <strong style="color: var(--primary);">45</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span>Completadas</span>
-                    <strong style="color: var(--success-color);">32</strong>
+                    <strong style="color: var(--success);">32</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span>Pendientes</span>
-                    <strong style="color: var(--warning-color);">12</strong>
+                    <strong style="color: var(--warning);">12</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span>Canceladas</span>
-                    <strong style="color: var(--danger-color);">3</strong>
+                    <strong style="color: var(--danger);">3</strong>
                 </div>
             </div>
         </div>
@@ -119,7 +109,7 @@
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-clock"></i> Actividad Reciente
+                 Actividad Reciente
             </h2>
         </div>
         <div class="card-body" id="recent-activity">
@@ -134,10 +124,10 @@
 <div class="card" style="margin-bottom: 2rem;">
     <div class="card-header">
         <h2 class="card-title">
-            <i class="fas fa-list"></i> Monitoreo de Pasantías
+             Monitoreo de Pasantías
         </h2>
         <a href="{% url 'frontend:export-report' %}" class="btn btn-secondary btn-small">
-            <i class="fas fa-download"></i> Exportar
+             Exportar
         </a>
     </div>
     <div class="card-body">
@@ -171,7 +161,7 @@
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-exclamation-triangle"></i> Alertas
+                 Alertas
             </h2>
         </div>
         <div class="card-body" id="alerts">
@@ -194,7 +184,7 @@
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">
-                <i class="fas fa-tasks"></i> Tareas Pendientes
+                 Tareas Pendientes
             </h2>
         </div>
         <div class="card-body" id="pending-tasks">
@@ -226,10 +216,10 @@
 <div class="card" style="margin-top: 2rem;">
     <div class="card-header">
         <h2 class="card-title">
-            <i class="fas fa-users"></i> Gestión de Usuarios
+             Gestión de Usuarios
         </h2>
         <a href="{% url 'frontend:users-management' %}" class="btn btn-primary btn-small">
-            <i class="fas fa-plus"></i> Nuevo Usuario
+             Nuevo Usuario
         </a>
     </div>
     <div class="card-body">

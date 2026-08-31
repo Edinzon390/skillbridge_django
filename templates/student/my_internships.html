@@ -11,7 +11,7 @@
       <li class="card mb-2">
         <div class="card-body">
           <p style="font-weight:600">{{ intern.company.name }}</p>
-          <p class="text-muted">Supervisor: {{ intern.supervisor.full_name if intern.supervisor }}</p>
+          <p class="text-muted">Supervisor: {% if intern.supervisor %}{{ intern.supervisor.full_name }}{% else %}Sin asignar{% endif %}</p>
           <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
           <p><strong>Horas:</strong> {{ intern.total_hours }}</p>
           <p class="table-actions">

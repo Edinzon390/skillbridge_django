@@ -3,31 +3,21 @@
 {% block title %}{{ page_title|default:"Página" }} - SkillBridge{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 760px; margin: 2rem auto;">
-    <div class="card-header">
-        <h1 class="card-title">
-            <i class="fas fa-{{ page_icon|default:'tools' }}"></i> {{ page_title|default:"Página" }}
-        </h1>
-        <p class="card-subtitle">{{ page_message|default:"Esta sección está en desarrollo y estará disponible pronto." }}</p>
-    </div>
-    <div class="card-body">
-        <p>SkillBridge ya está respondiendo correctamente. Si necesitas avanzar en esta pantalla, podemos personalizarla con contenido real en el siguiente paso.</p>
-    </div>
+<div class="placeholder-card" style="max-width: 760px; margin: 3rem auto;">
+    
+    <h2>{{ page_title|default:"Página" }}</h2>
+    <p>{{ page_message|default:"Esta sección está en desarrollo y estará disponible pronto." }}</p>
+    <p style="margin-top: 1rem;">SkillBridge ya está respondiendo correctamente. Si necesitas avanzar en esta pantalla, podemos personalizarla con contenido real en el siguiente paso.</p>
 </div>
 {% endblock %}
 
 {% block public_content %}
-<div class="auth-container" style="min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 2rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);">
-    <div class="card" style="max-width: 760px; width: 100%;">
-        <div class="card-header">
-            <h1 class="card-title">
-                <i class="fas fa-{{ page_icon|default:'tools' }}"></i> {{ page_title|default:"Página" }}
-            </h1>
-            <p class="card-subtitle">{{ page_message|default:"Esta sección está en desarrollo y estará disponible pronto." }}</p>
-        </div>
-        <div class="card-body">
-            <p>SkillBridge ya está respondiendo correctamente. Si necesitas avanzar en esta pantalla, podemos personalizarla con contenido real en el siguiente paso.</p>
-        </div>
+<div class="auth-container">
+    <div class="placeholder-card" style="max-width: 760px; width: 100%;">
+        
+        <h2>{{ page_title|default:"Página" }}</h2>
+        <p>{{ page_message|default:"Esta sección está en desarrollo y estará disponible pronto." }}</p>
+        <p style="margin-top: 1rem;">SkillBridge ya está respondiendo correctamente. Si necesitas avanzar en esta pantalla, podemos personalizarla con contenido real en el siguiente paso.</p>
     </div>
 </div>
 {% endblock %}

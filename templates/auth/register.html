@@ -6,36 +6,35 @@
 <div class="auth-container" style="min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 2rem;">
     <div class="card" style="max-width: 480px; width: 100%;">
         <div class="card-header">
-            <h1 class="card-title"><i class="fas fa-user-plus"></i> Crear cuenta</h1>
-            <p class="card-subtitle">Regístrate para acceder a SkillBridge.</p>
+            <h1 class="card-title" style="margin-bottom: 0.3rem;"> Crear cuenta</h1>
+            <p class="card-subtitle">Regístrate para acceder a SkillBridge</p>
         </div>
         <div class="card-body">
             <form method="post" class="form-group">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label class="form-label">¿Qué tipo de cuenta quieres crear?</label>
-                    <div class="form-group" style="display: grid; gap: 0.75rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
-                            <input type="radio" name="role" value="student" checked>
-                            <span><strong>Estudiante</strong> — Quiero encontrar pasantías.</span>
+                    <label class="form-label"><strong>¿Qué tipo de cuenta quieres crear?</strong></label>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
+                            <input type="radio" name="role" value="student" checked style="cursor: pointer;">
+                            <span><strong>Estudiante</strong><br><span style="font-size: 0.85rem; color: var(--text-secondary);">Quiero encontrar pasantías</span></span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
-                            <input type="radio" name="role" value="company">
-                            <span><strong>Empresa</strong> — Quiero publicar ofertas.</span>
+                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
+                            <input type="radio" name="role" value="company" style="cursor: pointer;">
+                            <span><strong>Empresa</strong><br><span style="font-size: 0.85rem; color: var(--text-secondary);">Quiero publicar ofertas</span></span>
                         </label>
                     </div>
                 </div>
 
-                <!-- Información adicional para empresas -->
                 <div id="company-info" class="form-group" style="display: none;">
                     <label for="company_name" class="form-label">Nombre de la empresa</label>
                     <input type="text" id="company_name" name="company_name" class="form-input" placeholder="Ej: Tech Solutions">
-                    <div class="form-help">Si te registras como empresa, ingresa el nombre de tu organización.</div>
+                    <div class="form-help">Si te registras como empresa, ingresa el nombre de tu organización</div>
                 </div>
                 <div id="student-info" class="form-group" style="display: block;">
                     <label for="full_name" class="form-label">Tu nombre completo</label>
                     <input type="text" id="full_name" name="full_name" class="form-input" placeholder="Ej: Ana García">
-                    <div class="form-help">Este nombre se mostrará en la plataforma en lugar del correo.</div>
+                    <div class="form-help">Este nombre se mostrará en la plataforma en lugar del correo</div>
                 </div>
 
                 <div class="form-group">
@@ -44,19 +43,21 @@
                 </div>
                 <div class="form-group">
                     <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Crea una contraseña" required>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Crea una contraseña segura" required>
+                    <div class="form-help">Mínimo 8 caracteres, incluye mayúsculas, números y símbolos</div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Registrarme</button>
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem;">
+                     Registrarme
+                </button>
             </form>
-            <p style="margin-top: 1rem; text-align: center; color: var(--text-secondary);">
-                ¿Ya tienes cuenta? <a href="{% url 'frontend:login' %}" style="color: var(--primary-color); font-weight: 600;">Inicia sesión</a>
-            </p>
+            <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-secondary); margin: 0;">¿Ya tienes cuenta? <a href="{% url 'frontend:login' %}" style="color: var(--primary); font-weight: 700;">Inicia sesión</a></p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-// Mostrar/ocultar campos según rol
 const roleRadios = document.querySelectorAll('input[name="role"]');
 function toggleCompanyInfo() {
     const companyInfo = document.getElementById('company-info');
@@ -71,7 +72,6 @@ function toggleCompanyInfo() {
     }
 }
 roleRadios.forEach(r => r.addEventListener('change', toggleCompanyInfo));
-// Inicializar
 toggleCompanyInfo();
 </script>
 

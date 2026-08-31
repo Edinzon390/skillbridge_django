@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0B1120">
     <title>{% block title %}SkillBridge - Plataforma de Pasantías{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     {% block extra_css %}{% endblock %}
@@ -12,10 +16,15 @@
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="navbar-container">
-            <a href="{% url 'frontend:home' %}" class="navbar-brand">
-                <img src="/static/images/logo.svg" alt="SkillBridge" class="brand-logo" />
-                <span class="sr-only">SkillBridge</span>
-            </a>
+            <div class="navbar-left">
+                <button type="button" class="mobile-nav-toggle" aria-label="Abrir menú">
+                    
+                </button>
+                <a href="{% url 'frontend:home' %}" class="navbar-brand">
+                    <img src="/static/images/logo.svg" alt="SkillBridge" class="brand-logo" />
+                    <span class="sr-only">SkillBridge</span>
+                </a>
+            </div>
 
             <ul class="navbar-menu">
                 <li><a href="{% url 'frontend:home' %}">Inicio</a></li>
@@ -37,7 +46,7 @@
             </ul>
 
             <div class="navbar-user">
-                <button id="theme-toggle" class="btn btn-outline btn-small" title="Cambiar tema">☀️</button>
+                <button id="theme-toggle" class="theme-toggle" title="Cambiar tema" type="button" aria-label="Cambiar tema">☀️</button>
                 {% if request.user.is_authenticated %}
                     <div class="user-avatar" title="{% if request.user.company %}{{ request.user.company.name }}{% else %}{{ request.user.get_full_name }}{% endif %}">
                         {% if request.user.company %}
@@ -64,31 +73,26 @@
                 {% if "STUDENT" in user_roles %}
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:student-dashboard' %}" class="{% if request.resolver_match.url_name == 'student-dashboard' %}active{% endif %}">
-                            <span class="sidebar-icon">📊</span>
                             Dashboard
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:internships' %}" class="{% if request.resolver_match.url_name == 'internships' %}active{% endif %}">
-                            <span class="sidebar-icon">💼</span>
                             Oportunidades
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:my-applications' %}" class="{% if request.resolver_match.url_name == 'my-applications' %}active{% endif %}">
-                            <span class="sidebar-icon">📝</span>
                             Mis Aplicaciones
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:my-internships' %}" class="{% if request.resolver_match.url_name == 'my-internships' %}active{% endif %}">
-                            <span class="sidebar-icon">🎓</span>
                             Mis Pasantías
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
-                            <span class="sidebar-icon">👤</span>
                             Perfil
                         </a>
                     </li>
@@ -97,33 +101,28 @@
                 {% if "COMPANY" in user_roles or "COMPANY_SUPERVISOR" in user_roles %}
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:company-dashboard' %}" class="{% if request.resolver_match.url_name == 'company-dashboard' %}active{% endif %}">
-                            <span class="sidebar-icon">📊</span>
                             Dashboard
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:company-offers' %}" class="{% if request.resolver_match.url_name == 'company-offers' %}active{% endif %}">
-                            <span class="sidebar-icon">📋</span>
                             Mis Ofertas
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:company-internships' %}" class="{% if request.resolver_match.url_name == 'company-internships' %}active{% endif %}">
-                            <span class="sidebar-icon">👥</span>
                             Pasantías Activas
                         </a>
                     </li>
                     {% if "COMPANY_SUPERVISOR" in user_roles %}
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:hours-validation' %}" class="{% if request.resolver_match.url_name == 'hours-validation' %}active{% endif %}">
-                            <span class="sidebar-icon">⏰</span>
                             Validar Horas
                         </a>
                     </li>
                     {% endif %}
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:company-profile' %}" class="{% if request.resolver_match.url_name == 'company-profile' %}active{% endif %}">
-                            <span class="sidebar-icon">🏢</span>
                             Perfil Empresa
                         </a>
                     </li>
@@ -132,32 +131,27 @@
                 {% if "COORDINATOR" in user_roles or "INSTITUTION_ADMIN" in user_roles or "SUPER_ADMIN" in user_roles %}
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:admin-dashboard' %}" class="{% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
-                            <span class="sidebar-icon">📊</span>
                             Dashboard Admin
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:students-management' %}" class="{% if request.resolver_match.url_name == 'students-management' %}active{% endif %}">
-                            <span class="sidebar-icon">👨‍🎓</span>
                             Estudiantes
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:internships-monitoring' %}" class="{% if request.resolver_match.url_name == 'internships-monitoring' %}active{% endif %}">
-                            <span class="sidebar-icon">📈</span>
                             Monitoreo
                         </a>
                     </li>
                     {% if "SUPER_ADMIN" in user_roles %}
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:institutions' %}" class="{% if request.resolver_match.url_name == 'institutions' %}active{% endif %}">
-                            <span class="sidebar-icon">🏛️</span>
                             Instituciones
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
                         <a href="{% url 'frontend:companies-management' %}" class="{% if request.resolver_match.url_name == 'companies-management' %}active{% endif %}">
-                            <span class="sidebar-icon">🏭</span>
                             Empresas
                         </a>
                     </li>
@@ -168,7 +162,6 @@
                 
                 <li class="sidebar-menu-item">
                     <a href="{% url 'frontend:help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">
-                        <span class="sidebar-icon">❓</span>
                         Ayuda
                     </a>
                 </li>

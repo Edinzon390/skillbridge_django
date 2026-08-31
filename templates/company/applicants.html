@@ -3,23 +3,82 @@
 {% block title %}Aplicantes - {{ offer.title }}{% endblock %}
 
 {% block content %}
-<h1>Aplicantes para: {{ offer.title }}</h1>
+<div class="page-header">
+    <div>
+        <h1> Aplicantes: {{ offer.title }}</h1>
+        <p>Revisa y gestiona las aplicaciones para esta oferta</p>
+    </div>
+    <a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">
+         Volver
+    </a>
+</div>
 
 {% if applications and applications|length > 0 %}
-  <ul class="company-applicants-list">
+<div class="applicants-list">
     {% for app in applications %}
-      <li class="card mb-2">
-        <div class="card-body">
-          <p style="font-weight:600">{{ app.student.user.get_full_name|default:app.student.user.username }}</p>
-          <p class="text-muted">{{ app.message|default:'Sin mensaje' }}</p>
-          <p><strong>Estado:</strong> {{ app.get_status_display }}</p>
+    <div class="card application-item">
+        <div class="card-header">
+            <h3 class="card-title">{{ app.student.user.get_full_name|default:app.student.user.username }}</h3>
+            <span class="badge badge-{{ app.get_status_display|lower }}">{{ app.get_status_display }}</span>
         </div>
-      </li>
+        <div class="card-body">
+            <p class="text-secondary" style="margin-bottom: 1rem;">{{ app.message|default:'Sin mensaje de presentación' }}</p>
+
+            {% if app.status == 'PENDING' %}
+            <div class="button-group">
+                <button class="btn btn-primary btn-small" onclick="handleDecision({{ app.id }}, 'accept', this)">
+                     Aceptar
+                </button>
+                <button class="btn btn-danger btn-small" onclick="handleDecision({{ app.id }}, 'reject', this)">
+                     Rechazar
+                </button>
+                <a href="{% url 'frontend:student-profile-view' app.student.id %}" class="btn btn-outline btn-small">
+                     Ver Perfil
+                </a>
+            </div>
+            {% else %}
+            <div class="alert" style="margin-bottom: 0;">
+                <p>Esta aplicación ya ha sido {{ app.get_status_display|lower }}.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
     {% endfor %}
-  </ul>
+</div>
 {% else %}
-  <p>No hay aplicantes para esta oferta.</p>
+<div class="placeholder-card">
+    
+    <h3>No hay aplicantes</h3>
+    <p>Aún no hay estudiantes que hayan aplicado a esta oferta.</p>
+    <a href="{% url 'frontend:company-offers' %}" class="btn btn-primary">Ver mis ofertas</a>
+</div>
 {% endif %}
 
-<p><a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">Volver a Ofertas</a></p>
+{% block extra_js %}
+<script>
+function getCsrfToken(){
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';').map(c=>c.trim());
+    for(const c of cookies){ if(c.startsWith(name+'=')) return decodeURIComponent(c.split('=')[1]); }
+    return null;
+}
+
+function handleDecision(applicationId, action, btn){
+    if(!confirm('Confirma que quieres ' + action + ' esta aplicación?')) return;
+    const csrftoken = getCsrfToken();
+    btn.disabled = true;
+    axios.post('/api/internships/applications/' + applicationId + '/' + action + '/', {}, { headers: { 'X-CSRFToken': csrftoken } })
+        .then(resp => {
+            alert('Aplicación ' + action + 'ada correctamente.');
+            window.location.reload();
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error al ejecutar la acción.');
+            btn.disabled = false;
+        });
+}
+</script>
+{% endblock %}
+
 {% endblock %}

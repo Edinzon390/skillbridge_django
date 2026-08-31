@@ -1,14 +1,108 @@
-/* Dark theme overrides using CSS variables */
-:root{
-  --bg-color: #0b1220;
-  --text-color: #e6eef8;
-  --muted-color: #c7d3e6;
-  --primary-color: #3ea0ff;
-  --border-color: rgba(255,255,255,0.06);
-  --sidebar-bg: #081024;
+:root {
+  --bg-main: #0F172A;
+  --bg-secondary: #111827;
+  --bg-card: #111827;
+  --bg-soft: #0B1120;
+  --dark-main: #0B1120;
+  --dark-secondary: #111827;
+  --dark-soft: #1E293B;
+  --text-primary: #E2E8F0;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border-color: rgba(148, 163, 184, 0.24);
+  --border-hover: rgba(148, 163, 184, 0.4);
+  --primary: #60A5FA;
+  --primary-hover: #3B82F6;
+  --primary-color: #60A5FA;
+  --secondary-color: #22D3EE;
+  --cyan: #22D3EE;
+  --success: #34D399;
+  --success-color: #34D399;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --info: #7DD3FC;
+  --light-bg: #0F172A;
 }
 
-html,body{ background:var(--bg-color); color:var(--text-color) }
-.navbar, .card{ background:transparent }
-.sidebar{ background:var(--sidebar-bg); border-right:1px solid var(--border-color) }
-.btn{ box-shadow:none }
+html[data-theme='dark'] body {
+  background: linear-gradient(180deg, #020817 0%, #0F172A 100%);
+  color: var(--text-primary);
+}
+
+html[data-theme='dark'] .navbar {
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom-color: var(--border-color);
+}
+
+html[data-theme='dark'] .navbar-menu a,
+html[data-theme='dark'] .navbar-user span,
+html[data-theme='dark'] .logout-btn,
+html[data-theme='dark'] .card-title,
+html[data-theme='dark'] .page-header p,
+html[data-theme='dark'] .feature-card p,
+html[data-theme='dark'] .stat-label,
+html[data-theme='dark'] .table thead th,
+html[data-theme='dark'] .table tbody td,
+html[data-theme='dark'] .form-label,
+html[data-theme='dark'] .form-input,
+html[data-theme='dark'] textarea,
+html[data-theme='dark'] select,
+html[data-theme='dark'] .alert,
+html[data-theme='dark'] .badge,
+html[data-theme='dark'] .stat-change {
+  color: var(--text-primary);
+}
+
+html[data-theme='dark'] .navbar-menu a:hover,
+html[data-theme='dark'] .navbar-menu a.active {
+  background: rgba(96, 165, 250, 0.12);
+  color: #E0F2FE;
+}
+
+html[data-theme='dark'] .card,
+html[data-theme='dark'] .stat-card,
+html[data-theme='dark'] .feature-card,
+html[data-theme='dark'] .stat-box,
+html[data-theme='dark'] .modal-content {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: var(--border-color);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.5);
+}
+
+html[data-theme='dark'] .card-header,
+html[data-theme='dark'] .table thead th {
+  background: rgba(15, 23, 42, 0.78);
+}
+
+html[data-theme='dark'] .form-input,
+html[data-theme='dark'] select,
+html[data-theme='dark'] textarea {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: var(--border-color);
+}
+
+html[data-theme='dark'] .logout-btn,
+html[data-theme='dark'] .theme-toggle,
+html[data-theme='dark'] .btn-outline {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+html[data-theme='dark'] .navbar-landing {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+html[data-theme='dark'] .navbar-links a,
+html[data-theme='dark'] .navbar-brand-landing,
+html[data-theme='dark'] .feature-card h3,
+html[data-theme='dark'] .stat-number,
+html[data-theme='dark'] .cta-section h2,
+html[data-theme='dark'] .cta-section p {
+  color: var(--text-primary);
+}
+
+html[data-theme='dark'] .feature-card,
+html[data-theme='dark'] .stat-box {
+  background: rgba(15, 23, 42, 0.9);
+}

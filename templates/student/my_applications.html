@@ -6,7 +6,7 @@
 <div class="applications-shell">
     <header class="applications-header">
         <div class="header-icon">
-            <i class="fas fa-paper-plane"></i>
+            
         </div>
         <div>
             <h1>Mis Aplicaciones</h1>
@@ -44,10 +44,10 @@
             </div>
 
             <div class="application-meta">
-                <span><i class="fas fa-map-marker-alt"></i> {{ application.location }}</span>
-                <span><i class="fas fa-calendar-alt"></i> {{ application.applied_at }}</span>
+                <span> {{ application.location }}</span>
+                <span> {{ application.applied_at }}</span>
                 {% if application.deadline %}
-                <span><i class="fas fa-hourglass-half"></i> Cierre: {{ application.deadline }}</span>
+                <span> Cierre: {{ application.deadline }}</span>
                 {% endif %}
             </div>
 
