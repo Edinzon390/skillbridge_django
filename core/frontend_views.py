@@ -185,6 +185,7 @@ def apply_to_opportunity(request, opportunity_id):
         application.full_clean()
         application.save()
         messages.success(request, f'Tu postulación a "{opportunity.title}" fue enviada correctamente.')
+        return redirect('frontend:my-applications')
     except ValidationError as e:
         for field, errs in e.message_dict.items() if hasattr(e, 'message_dict') else [(None, e.messages)]:
             for msg in errs:
@@ -210,6 +211,12 @@ def my_applications(request):
         'ACCEPTED': 'success',
         'REJECTED': 'danger',
     }
+    status_label_map = {
+        'SENT': 'Aplicada',
+        'REVIEW': 'En revisión',
+        'ACCEPTED': 'Aceptada',
+        'REJECTED': 'Rechazada',
+    }
 
     applications = []
     review_count = 0
@@ -218,7 +225,7 @@ def my_applications(request):
         applications.append({
             'company': app.opportunity.company.name,
             'position': app.opportunity.title,
-            'status': app.get_status_display(),
+            'status': status_label_map.get(app.status, app.get_status_display()),
             'status_class': status_class_map.get(app.status, 'pending'),
             'location': app.opportunity.get_modality_display(),
             'applied_at': app.created_at,

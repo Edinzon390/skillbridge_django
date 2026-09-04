@@ -3,6 +3,7 @@ from .models import Opportunity, Application, Internship, Activity
 from companies.models import Company
 from institutions.models import Institution, TechnicalCareer
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
@@ -117,7 +118,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'detail': 'Current user is not a student.'})
         # Ensure uniqueness handled by model constraint; let DB raise if duplicate
         validated_data['student'] = student
-        app = Application.objects.create(**validated_data)
+        app = Application(**validated_data)
+        try:
+            app.full_clean()
+        except ValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict)
+        app.save()
         return app
 
 

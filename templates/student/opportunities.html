@@ -10,7 +10,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 <!-- FILTROS Y BÚSQUEDA -->
 <div class="card filters-card" style="margin-bottom: 2rem;">
     <div class="form-group">
@@ -72,20 +71,15 @@
              Filtrar
         </button>
     </div>
-=======
 {% if not has_profile %}
 <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
     <i class="fas fa-info-circle"></i>
     Debes <a href="{% url 'frontend:student-profile' %}">completar tu perfil</a> antes de poder aplicar a una oportunidad.
->>>>>>> 73d856689838a71eae195f374c80cd08c5d2c58a
 </div>
 {% endif %}
 
-<<<<<<< HEAD
 <!-- GRID DE OPORTUNIDADES -->
 <div id="opportunities-container" class="grid grid-2 grid-1-mobile">
-=======
-<div class="grid grid-2">
     {% for opp in opportunities %}
     <div class="card">
         <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
@@ -142,15 +136,12 @@
         </div>
     </div>
     {% empty %}
->>>>>>> 73d856689838a71eae195f374c80cd08c5d2c58a
     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
         <i class="fas fa-search" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
         <p style="color: var(--text-secondary);">No hay oportunidades activas en este momento.</p>
     </div>
     {% endfor %}
 </div>
-<<<<<<< HEAD
-
 <!-- PAGINACIÓN -->
 <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
     <button id="prev-page" class="btn btn-outline" style="min-width: 120px;">
@@ -666,6 +657,4 @@ if (document.readyState === 'loading') {
     initializeOpportunitiesPage();
 }
 </script>
-=======
->>>>>>> 73d856689838a71eae195f374c80cd08c5d2c58a
 {% endblock %}

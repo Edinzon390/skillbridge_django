@@ -66,6 +66,10 @@ class Application(models.Model):
     def clean(self):
         if not self.student.is_eligible:
             raise ValidationError("Solo estudiantes elegibles pueden aplicar.")
+        if self.opportunity.status != Opportunity.Status.ACTIVE:
+            raise ValidationError("Solo puedes aplicar a oportunidades activas.")
+        if self.opportunity.deadline < timezone.now():
+            raise ValidationError("La fecha límite de esta oportunidad ya venció.")
         active = Internship.objects.filter(
             student=self.student,
             status=Internship.Status.IN_PROGRESS
