@@ -117,6 +117,10 @@ def register_submit_v2(request):
 
 @login_required(login_url='frontend:login')
 def create_offer_view(request):
+    if request.user.role != Role.COMPANY:
+        messages.error(request, 'Solo las cuentas de empresa pueden publicar ofertas.')
+        return redirect(get_dashboard_redirect_url(request.user))
+
     if request.method == 'POST':
         user = request.user
         company = getattr(user, 'company', None)
@@ -134,16 +138,8 @@ def create_offer_view(request):
         location_type = request.POST.get('location_type', 'on-site')
         area = request.POST.get('area', '').strip()
         required_skills = request.POST.get('required_skills', '')
-        nice_to_have = request.POST.get('nice_to_have', '')
-        benefits = request.POST.get('benefits', '')
-        is_paid = bool(request.POST.get('is_paid'))
-        salary_min = request.POST.get('salary_min') or None
-        salary_max = request.POST.get('salary_max') or None
         supervisor_name = request.POST.get('supervisor_name', '').strip()
         supervisor_email = request.POST.get('supervisor_email', '').strip()
-        supervisor_phone = request.POST.get('supervisor_phone', '').strip()
-        contact_email = request.POST.get('contact_email', '').strip()
-        contact_phone = request.POST.get('contact_phone', '').strip()
         deadline = request.POST.get('deadline')
 
         modality_map = {
@@ -158,13 +154,22 @@ def create_offer_view(request):
 
         requirements_list = [s.strip() for s in required_skills.split(',') if s.strip()]
 
-        deadline_dt = None
-        if deadline:
-            try:
-                d = timezone.datetime.strptime(deadline, '%Y-%m-%d').date()
-                deadline_dt = timezone.make_aware(timezone.datetime(d.year, d.month, d.day, 23, 59, 59))
-            except Exception:
-                deadline_dt = None
+        if not title or not description or not deadline:
+            messages.error(request, 'Completa el título, la descripción y la fecha límite.')
+            return render(request, 'company/create-offer.html')
+
+        try:
+            d = timezone.datetime.strptime(deadline, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, 'La fecha límite no es válida.')
+            return render(request, 'company/create-offer.html')
+        deadline_dt = timezone.make_aware(timezone.datetime(d.year, d.month, d.day, 23, 59, 59))
+
+        try:
+            vacancies = max(1, int(request.POST.get('vacancies') or 1))
+        except ValueError:
+            messages.error(request, 'La cantidad de vacantes no es válida.')
+            return render(request, 'company/create-offer.html')
 
         supervisor = None
         if supervisor_email:
@@ -174,16 +179,16 @@ def create_offer_view(request):
                 defaults={'full_name': supervisor_name or supervisor_email.split('@')[0], 'phone': supervisor_phone}
             )
 
-        opp = Opportunity.objects.create(
+        Opportunity.objects.create(
             institution=institution,
             company=company,
             career=career,
             title=title,
             description=description or 'Sin descripción',
             requirements=requirements_list,
-            vacancies=1,
+            vacancies=vacancies,
             modality=modality,
-            deadline=deadline_dt or timezone.now() + timezone.timedelta(days=30),
+            deadline=deadline_dt,
             status=Opportunity.Status.ACTIVE
         )
 
