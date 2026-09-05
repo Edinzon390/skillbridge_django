@@ -10,7 +10,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 <!-- FILTROS Y BÚSQUEDA -->
 <div class="card filters-card" style="margin-bottom: 2rem;">
     <div class="form-group">
@@ -72,84 +71,17 @@
              Filtrar
         </button>
     </div>
-=======
 {% if not has_profile %}
 <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
     <i class="fas fa-info-circle"></i>
     Debes <a href="{% url 'frontend:student-profile' %}">completar tu perfil</a> antes de poder aplicar a una oportunidad.
->>>>>>> 73d856689838a71eae195f374c80cd08c5d2c58a
 </div>
 {% endif %}
+</div>
 
-<<<<<<< HEAD
 <!-- GRID DE OPORTUNIDADES -->
 <div id="opportunities-container" class="grid grid-2 grid-1-mobile">
-=======
-<div class="grid grid-2">
-    {% for opp in opportunities %}
-    <div class="card">
-        <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
-            <div>
-                <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">{{ opp.title }}</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                    <i class="fas fa-building"></i> {{ opp.company.name }}
-                </p>
-            </div>
-            <span class="badge badge-primary">{{ opp.get_modality_display }}</span>
-        </div>
-
-        <div class="card-body" style="padding: 1rem 0; margin-top: 1rem; border-top: 1px solid var(--border-color);">
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                    <i class="fas fa-graduation-cap"></i> {{ opp.career.name }}
-                </span>
-                <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                    <i class="fas fa-calendar-alt"></i> Cierra: {{ opp.deadline|date:"d M Y" }}
-                </span>
-                <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                    <i class="fas fa-users"></i> {{ opp.vacancies }} vacante{{ opp.vacancies|pluralize }}
-                </span>
-            </div>
-
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
-                {{ opp.description|truncatewords:25 }}
-            </p>
-
-            {% if opp.requirements %}
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                {% for req in opp.requirements %}
-                <span class="badge badge-secondary">{{ req }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                {% if opp.id in applied_ids %}
-                <button class="btn btn-outline btn-small" disabled>
-                    <i class="fas fa-check"></i> Ya aplicaste
-                </button>
-                {% elif has_profile %}
-                <form method="post" action="{% url 'frontend:apply-to-opportunity' opp.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-small">
-                        <i class="fas fa-paper-plane"></i> Aplicar Ahora
-                    </button>
-                </form>
-                {% else %}
-                <button class="btn btn-outline btn-small" disabled>Completa tu perfil primero</button>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% empty %}
->>>>>>> 73d856689838a71eae195f374c80cd08c5d2c58a
-    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-        <i class="fas fa-search" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
-        <p style="color: var(--text-secondary);">No hay oportunidades activas en este momento.</p>
-    </div>
-    {% endfor %}
 </div>
-<<<<<<< HEAD
 
 <!-- PAGINACIÓN -->
 <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
@@ -666,6 +598,4 @@ if (document.readyState === 'loading') {
     initializeOpportunitiesPage();
 }
 </script>
-=======
->>>>>>> 73d856689838a71eae195f374c80cd08c5d2c58a
 {% endblock %}
