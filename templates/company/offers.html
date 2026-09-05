@@ -23,9 +23,17 @@
             </div>
             {% if offer.status == 'CANCELLED' %}
             <span class="badge badge-warning">Cancelada</span>
+            {% elif offer.status == 'PAUSED' %}
+            <span class="badge badge-warning">Inactiva</span>
             {% else %}
-            <span class="badge badge-success">Activa</span>
+            <form method="post" action="{% url 'frontend:delete-offer' offer.id %}">
+               {% csrf_token %}
+               <button class="badge badge-success" type="submit"
+                       onclick="return confirm('¿Marcar esta oferta como cancelada?')">
+                   Activa
+               </button>
             {% endif %}
+            {% if offer.status == 'ACTIVE' %}</form>{% endif %}
         </div>
         <div class="card-body">
             <p class="text-secondary" style="margin-bottom: 1rem;">{{ offer.description|truncatechars:200 }}</p>
@@ -41,6 +49,12 @@
                 <a class="btn btn-secondary btn-small" href="{% url 'frontend:company-offer-applicants' offer.id %}">
                      Aplicantes ({{ offer.applications.count }})
                 </a>
+                <form method="post" action="{% url 'frontend:toggle-offer-status' offer.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button class="btn btn-small {% if offer.status == 'ACTIVE' %}btn-outline{% else %}btn-primary{% endif %}" type="submit">
+                        {% if offer.status == 'ACTIVE' %}Marcar inactiva{% else %}Marcar activa{% endif %}
+                    </button>
+                </form>
                 <form method="post" action="{% url 'frontend:delete-offer' offer.id %}" style="display:inline">
                     {% csrf_token %}
                     <button class="btn btn-danger btn-small" type="submit" onclick="return confirm('¿Cancelar esta oferta? Esta acción marcará la oferta como cancelada.')">

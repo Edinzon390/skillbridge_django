@@ -10,6 +10,25 @@
     </div>
 </div>
 
+{% if active_offers %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <h2 class="card-title">Ofertas activas publicadas</h2>
+    </div>
+    <div class="card-body">
+        {% for offer in active_offers %}
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--border-color);">
+            <div>
+                <strong>{{ offer.title }}</strong>
+                <p class="text-secondary text-sm">{{ offer.career.name }} · {{ offer.vacancies }} vacante{{ offer.vacancies|pluralize }}</p>
+            </div>
+            <a class="btn btn-outline btn-small" href="{% url 'frontend:company-offer-detail' offer.id %}">Ver oferta</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% if internships and internships|length > 0 %}
 <div class="internships-grid">
     {% for intern in internships %}

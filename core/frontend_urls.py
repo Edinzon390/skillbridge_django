@@ -1,6 +1,6 @@
 from django.urls import path
 from . import frontend_views
-from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, delete_offer_view, company_dashboard_json, company_internships_json, company_pending_applicants_json
+from .frontend_actions_clean import register_submit, register_submit_v2, create_offer_view, edit_offer_view, company_profile_view, save_chat_message, company_offers_json, toggle_offer_status_view, delete_offer_view, company_dashboard_json, company_internships_json, company_pending_applicants_json
 
 app_name = 'frontend'
 
@@ -45,6 +45,7 @@ urlpatterns = [
     path('company/offers/<int:offer_id>/edit/', edit_offer_view, name='edit-offer'),
     path('company/offers/<int:offer_id>/', edit_offer_view, name='company-offer-detail'),
     path('company/offers/<int:offer_id>/applicants/', frontend_views.applicants_view, name='company-offer-applicants'),
+    path('company/offers/<int:offer_id>/toggle-status/', toggle_offer_status_view, name='toggle-offer-status'),
     path('company/offers/<int:offer_id>/delete/', delete_offer_view, name='delete-offer'),
     path('company/internships/', frontend_views.company_internships, name='company-internships'),
     path('company/internships/json/', company_internships_json, name='company-internships-json'),

@@ -182,6 +182,9 @@ def apply_to_opportunity(request, opportunity_id):
     )
 
     try:
+        if not student_profile.is_eligible and student_profile.institution_id and student_profile.career_id and student_profile.student_code:
+            student_profile.is_eligible = True
+            student_profile.save(update_fields=['is_eligible'])
         application.full_clean()
         application.save()
         messages.success(request, f'Tu postulación a "{opportunity.title}" fue enviada correctamente.')
@@ -315,6 +318,7 @@ def student_profile(request):
             profile.phone = phone
             profile.bio = bio
             profile.skills = skills
+            profile.is_eligible = True
 
             if request.FILES.get('cv'):
                 profile.cv = request.FILES['cv']
@@ -351,12 +355,18 @@ def company_dashboard(request):
 @login_required(login_url='frontend:login')
 def company_internships(request, internship_id=None):
     # Show internships for the logged-in company user
-    from internships.models import Internship
+    from internships.models import Internship, Opportunity
     company = getattr(request.user, 'company', None)
     internships = []
+    active_offers = []
     if company:
         internships = Internship.objects.filter(company=company).select_related('student__user', 'supervisor', 'application__opportunity')
-    context = {'internships': internships}
+        active_offers = Opportunity.objects.filter(
+            company=company,
+            status=Opportunity.Status.ACTIVE,
+            deadline__gte=timezone.now(),
+        ).select_related('career').order_by('-created_at')
+    context = {'internships': internships, 'active_offers': active_offers}
     return render(request, 'company/internships.html', context)
 
 
