@@ -57,3 +57,16 @@ SUPER_ADMIN, INSTITUTION_ADMIN, COORDINATOR, TUTOR, STUDENT, COMPANY, COMPANY_SU
 8. Las actividades quedan registradas en bitácora.
 
 Las funciones futuras de IA/matching, QR, geolocalización, firma digital, bolsa de empleo, app móvil y dashboard nacional quedan preparadas como extensiones y no forman parte del MVP.
+
+## Despliegue en Render con MongoDB
+
+El proyecto incluye `render.yaml` para desplegar Django con Gunicorn y WhiteNoise. Render no ofrece MongoDB administrado, por lo que debes crear una base en MongoDB Atlas y configurar estas variables en el servicio web:
+
+- `MONGODB_URI`: cadena de conexi?n de Atlas, por ejemplo `mongodb+srv://usuario:password@cluster.mongodb.net/?retryWrites=true&w=majority`
+- `MONGODB_NAME`: `skillbridge`
+- `DJANGO_SECRET_KEY`: valor secreto generado en Render
+- `DJANGO_DEBUG`: `False`
+- `DJANGO_ALLOWED_HOSTS`: `.onrender.com`
+
+El comando de compilaci?n ejecuta las migraciones y recopila los archivos est?ticos. El comando de inicio es `gunicorn skillbridge.wsgi:application`.
+
