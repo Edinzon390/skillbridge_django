@@ -14,6 +14,7 @@
           <p class="text-muted">Supervisor: {% if intern.supervisor %}{{ intern.supervisor.full_name }}{% else %}Sin asignar{% endif %}</p>
           <p><strong>Estado:</strong> {{ intern.get_status_display }}</p>
           <p><strong>Horas:</strong> {{ intern.total_hours }}</p>
+          <p><strong>Fin esperado:</strong> {% if intern.end_date %}{{ intern.end_date|date:"d/m/Y" }}{% else %}Por definir{% endif %}</p>
           <p class="table-actions">
             <a class="btn btn-small btn-outline" href="{% url 'frontend:student-internship-detail' intern.id %}">Ver</a>
           </p>

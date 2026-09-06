@@ -16,6 +16,51 @@
 </div>
 {% endif %}
 
+<form method="get" class="card filters-card" style="margin-bottom: 2rem;">
+    <div class="filters-grid">
+        <div class="form-group">
+            <label for="opportunity-search">Buscar</label>
+            <input id="opportunity-search" name="search" type="search" class="form-input"
+                   value="{{ filters.search }}" placeholder="Puesto, empresa o carrera">
+        </div>
+        <div class="form-group">
+            <label for="opportunity-modality">Formato de trabajo</label>
+            <select id="opportunity-modality" name="modality" class="form-input">
+                <option value="">Todos los formatos</option>
+                <option value="PRESENTIAL" {% if filters.modality == 'PRESENTIAL' %}selected{% endif %}>Presencial (oficina)</option>
+                <option value="REMOTE" {% if filters.modality == 'REMOTE' %}selected{% endif %}>Remoto (virtual)</option>
+                <option value="HYBRID" {% if filters.modality == 'HYBRID' %}selected{% endif %}>Híbrido (mixto)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="opportunity-institution">Institución</label>
+            <select id="opportunity-institution" name="institution" class="form-input">
+                <option value="">Todas las instituciones</option>
+                {% for institution in institutions %}
+                <option value="{{ institution.id }}" {% if filters.institution == institution.id|stringformat:'s' %}selected{% endif %}>
+                    {{ institution.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="opportunity-career">Carrera</label>
+            <select id="opportunity-career" name="career" class="form-input">
+                <option value="">Todas las carreras</option>
+                {% for career in careers %}
+                <option value="{{ career.id }}" {% if filters.career == career.id|stringformat:'s' %}selected{% endif %}>
+                    {{ career.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="button-group">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{% url 'frontend:student-opportunities' %}" class="btn btn-outline">Limpiar</a>
+    </div>
+</form>
+
 <div class="grid grid-2">
     {% for opp in opportunities %}
     <article class="card">
@@ -31,6 +76,7 @@
                 <span class="text-secondary">{{ opp.career.name }}</span>
                 <span class="text-secondary">Cierra: {{ opp.deadline|date:"d M Y" }}</span>
                 <span class="text-secondary">{{ opp.vacancies }} vacante{{ opp.vacancies|pluralize }}</span>
+                <span class="text-secondary">{{ opp.required_hours|default:0 }} h requeridas</span>
             </div>
             <p class="text-secondary">{{ opp.description|truncatewords:35 }}</p>
             {% if opp.requirements %}
@@ -44,10 +90,18 @@
                 {% if opp.id in applied_ids %}
                 <button class="btn btn-outline btn-small" disabled>Ya aplicaste</button>
                 {% elif has_profile %}
-                <form method="post" action="{% url 'frontend:apply-to-opportunity' opp.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-small">Aplicar ahora</button>
-                </form>
+                <button type="button" class="btn btn-primary btn-small apply-button"
+                        data-opportunity-id="{{ opp.id }}"
+                        data-title="{{ opp.title }}"
+                        data-company="{{ opp.company.name }}"
+                        data-career="{{ opp.career.name }}"
+                        data-modality="{{ opp.get_modality_display }}"
+                        data-required-hours="{{ opp.required_hours|default:0 }}"
+                        data-deadline="{{ opp.deadline|date:'d/m/Y H:i' }}"
+                        data-vacancies="{{ opp.vacancies }}"
+                        data-description="{{ opp.description }}">
+                    Aplicar ahora
+                </button>
                 {% else %}
                 <a href="{% url 'frontend:student-profile' %}" class="btn btn-outline btn-small">Completar perfil</a>
                 {% endif %}
@@ -56,8 +110,191 @@
     </article>
     {% empty %}
     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-        <p class="text-secondary">No hay oportunidades activas en este momento.</p>
+        <p class="text-secondary">
+            {% if filters.search or filters.modality or filters.institution or filters.career %}
+            No se encontraron oportunidades con esos filtros.
+            {% else %}
+            No hay oportunidades activas en este momento.
+            {% endif %}
+        </p>
+        {% if filters.search or filters.modality or filters.institution or filters.career %}
+        <a href="{% url 'frontend:student-opportunities' %}" class="btn btn-outline btn-small">Limpiar filtros</a>
+        {% endif %}
     </div>
     {% endfor %}
 </div>
+
+{% if has_profile %}
+<div id="apply-modal" class="apply-modal" hidden>
+    <div class="apply-modal-backdrop" data-close-apply-modal></div>
+    <section class="apply-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="apply-modal-title">
+        <button type="button" class="apply-modal-close" aria-label="Cerrar" data-close-apply-modal>&times;</button>
+        <h2 id="apply-modal-title">Confirmar postulación</h2>
+        <p class="text-secondary">Revisa los datos antes de enviar tu aplicación.</p>
+
+        <div class="apply-details-grid">
+            <div class="apply-detail-card">
+                <h3>Oferta</h3>
+                <p><strong id="apply-title"></strong></p>
+                <p id="apply-company"></p>
+                <p id="apply-career"></p>
+                <p id="apply-modality"></p>
+                <p id="apply-deadline"></p>
+                <p id="apply-vacancies"></p>
+                <p id="apply-hours"></p>
+                <p id="apply-description"></p>
+            </div>
+            <div class="apply-detail-card">
+                <h3>Datos del postulante</h3>
+                <p><strong>{{ request.user.get_full_name|default:request.user.username }}</strong></p>
+                <p>{{ request.user.email }}</p>
+                <p>{{ student_profile.phone|default:"Teléfono no registrado" }}</p>
+                <p>{{ student_profile.institution.name }}</p>
+                <p>{{ student_profile.career.name }}</p>
+                <p>Código: {{ student_profile.student_code }}</p>
+            </div>
+        </div>
+
+        <form id="apply-confirm-form" method="post">
+            {% csrf_token %}
+            <label for="application-message">Mensaje (opcional)</label>
+            <textarea id="application-message" name="message" class="form-input" rows="3"
+                      placeholder="Escribe un mensaje para la empresa"></textarea>
+            <div class="button-group" style="margin-top: 1rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" data-close-apply-modal>Cancelar</button>
+                <button type="submit" class="btn btn-primary">Confirmar y aplicar</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .apply-modal[hidden] {
+        display: none;
+    }
+
+    .apply-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+    }
+
+    .apply-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.62);
+    }
+
+    .apply-modal-dialog {
+        position: relative;
+        width: min(100%, 760px);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .apply-modal-dialog h2 {
+        margin-top: 0;
+    }
+
+    .apply-modal-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        border: 0;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 1.8rem;
+    }
+
+    .apply-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 1.25rem 0;
+    }
+
+    .apply-detail-card {
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--bg-soft);
+    }
+
+    .apply-detail-card h3 {
+        margin-top: 0;
+        font-size: 1rem;
+    }
+
+    .apply-detail-card p {
+        margin: 0.45rem 0;
+        color: var(--text-secondary);
+    }
+
+    .apply-detail-card strong {
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 700px) {
+        .apply-details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const applyModal = document.getElementById('apply-modal');
+    const applyForm = document.getElementById('apply-confirm-form');
+    const applyUrlTemplate = "{% url 'frontend:apply-to-opportunity' 0 %}";
+
+    function closeApplyModal() {
+        if (applyModal) {
+            applyModal.hidden = true;
+            document.body.style.overflow = '';
+        }
+    }
+
+    document.querySelectorAll('.apply-button').forEach((button) => {
+        button.addEventListener('click', () => {
+            document.getElementById('apply-title').textContent = button.dataset.title;
+            document.getElementById('apply-company').textContent = `Empresa: ${button.dataset.company}`;
+            document.getElementById('apply-career').textContent = `Carrera: ${button.dataset.career}`;
+            document.getElementById('apply-modality').textContent = `Formato de trabajo: ${button.dataset.modality}`;
+            document.getElementById('apply-deadline').textContent = `Cierre: ${button.dataset.deadline}`;
+            document.getElementById('apply-vacancies').textContent = `Vacantes: ${button.dataset.vacancies}`;
+            document.getElementById('apply-hours').textContent = `Horas requeridas: ${button.dataset.requiredHours} h`;
+            document.getElementById('apply-description').textContent = button.dataset.description;
+            applyForm.action = applyUrlTemplate.replace('/0/', `/${button.dataset.opportunityId}/`);
+            applyModal.hidden = false;
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    document.querySelectorAll('[data-close-apply-modal]').forEach((element) => {
+        element.addEventListener('click', closeApplyModal);
+    });
+
+    const targetOpportunityId = "{{ target_opportunity_id|escapejs }}";
+    if (targetOpportunityId) {
+        const targetButton = document.querySelector(
+            `.apply-button[data-opportunity-id="${targetOpportunityId}"]`
+        );
+        if (targetButton) {
+            targetButton.click();
+        }
+    }
+</script>
 {% endblock %}

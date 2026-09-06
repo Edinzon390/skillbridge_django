@@ -35,11 +35,11 @@
                     <input type="text" id="location" name="location" class="form-input" placeholder="Ej: Bogotá, Colombia">
                 </div>
                 <div class="form-group">
-                    <label for="location_type" class="form-label">Modalidad <span class="required">*</span></label>
+                    <label for="location_type" class="form-label">Formato de trabajo <span class="required">*</span></label>
                     <select id="location_type" name="location_type" class="form-select" required>
-                        <option value="on-site" {% if offer.modality == 'PRESENTIAL' %}selected{% endif %}>Presencial</option>
-                        <option value="remote" {% if offer.modality == 'REMOTE' %}selected{% endif %}>Remota</option>
-                        <option value="hybrid" {% if offer.modality == 'HYBRID' %}selected{% endif %}>Híbrida</option>
+                        <option value="on-site" {% if offer.modality == 'PRESENTIAL' %}selected{% endif %}>Presencial (oficina)</option>
+                        <option value="remote" {% if offer.modality == 'REMOTE' %}selected{% endif %}>Remoto (virtual)</option>
+                        <option value="hybrid" {% if offer.modality == 'HYBRID' %}selected{% endif %}>Híbrido (mixto)</option>
                     </select>
                 </div>
             </div>
@@ -55,6 +55,13 @@
                     <input type="number" id="vacancies" name="vacancies" class="form-input"
                            value="{{ offer.vacancies|default:1 }}" min="1" required>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label for="required_hours" class="form-label">Horas requeridas por el pasante <span class="required">*</span></label>
+                <input type="number" id="required_hours" name="required_hours" class="form-input"
+                       value="{{ offer.required_hours|default:240 }}" min="1" required>
+                <div class="form-help">Se indica la cantidad total de horas que debe completar durante la pasantía.</div>
             </div>
 
             <div class="form-group">

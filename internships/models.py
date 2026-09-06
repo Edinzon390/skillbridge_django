@@ -17,9 +17,9 @@ class StudentProfile(models.Model):
 
 class Opportunity(models.Model):
     class Modality(models.TextChoices):
-        PRESENTIAL = "PRESENTIAL", "Presencial"
-        REMOTE = "REMOTE", "Remota"
-        HYBRID = "HYBRID", "Híbrida"
+        PRESENTIAL = "PRESENTIAL", "Presencial (oficina)"
+        REMOTE = "REMOTE", "Remoto (virtual)"
+        HYBRID = "HYBRID", "Híbrido (mixto)"
 
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "Activa"
@@ -34,6 +34,7 @@ class Opportunity(models.Model):
     description = models.TextField()
     requirements = models.JSONField(default=list, blank=True)
     vacancies = models.PositiveIntegerField(default=1)
+    required_hours = models.PositiveIntegerField(default=0)
     modality = models.CharField(max_length=20, choices=Modality.choices)
     deadline = models.DateTimeField()
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
@@ -101,6 +102,14 @@ class Activity(models.Model):
     hours = models.DecimalField(max_digits=5, decimal_places=2)
     validated = models.BooleanField(default=False)
     validated_at = models.DateTimeField(null=True, blank=True)
+    validation_comment = models.TextField(blank=True)
+    validated_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.PROTECT,
+        related_name="activities_validated",
+        null=True,
+        blank=True,
+    )
     created_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT, related_name="activities_created")
     created_at = models.DateTimeField(auto_now_add=True)
 

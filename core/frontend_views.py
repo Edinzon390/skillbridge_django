@@ -1,10 +1,11 @@
-﻿from django.shortcuts import render as django_render, redirect
+from django.shortcuts import render as django_render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Sum
 from django.utils import timezone
 
 from .frontend_actions_clean import get_dashboard_redirect_url, register_submit, create_offer_view, edit_offer_view, company_profile_view, save_chat_message
@@ -73,56 +74,97 @@ def student_dashboard_json(request):
     from internships.models import Application, Internship, Opportunity
 
     student_profile = getattr(request.user, 'student_profile', None)
-    if not student_profile:
-        return JsonResponse({
-            'ok': True,
-            'totalApplications': 0,
-            'pendingApplications': 0,
-            'acceptedApplications': 0,
-            'activeInternship': None,
-            'availableOpportunities': 0,
-            'profileComplete': False,
-        })
-
-    total_applications = Application.objects.filter(student=student_profile).count()
-    pending_applications = Application.objects.filter(
-        student=student_profile, status__in=[Application.Status.SENT, Application.Status.REVIEW]
-    ).count()
-    accepted_applications = Application.objects.filter(
-        student=student_profile, status=Application.Status.ACCEPTED
-    ).count()
-
-    active_internship_obj = Internship.objects.filter(
-        student=student_profile, status=Internship.Status.IN_PROGRESS
-    ).select_related('company').first()
-
-    active_internship = None
-    if active_internship_obj:
-        active_internship = {
-            'id': active_internship_obj.id,
-            'company': active_internship_obj.company.name,
-            'status': active_internship_obj.get_status_display(),
-            'totalHours': active_internship_obj.total_hours,
-        }
-
     available_opportunities = Opportunity.objects.filter(
         status=Opportunity.Status.ACTIVE,
         deadline__gte=timezone.now(),
-    ).count()
+    ).select_related('company', 'career').order_by('-created_at')
+    available_opportunities_count = available_opportunities.count()
+
+    total_applications = 0
+    pending_applications = 0
+    accepted_applications = 0
+    active_internship = None
+    recent_applications = []
+
+    if student_profile:
+        total_applications = Application.objects.filter(student=student_profile).count()
+        pending_applications = Application.objects.filter(
+            student=student_profile,
+            status__in=[Application.Status.SENT, Application.Status.REVIEW],
+        ).count()
+        accepted_applications = Application.objects.filter(
+            student=student_profile,
+            status=Application.Status.ACCEPTED,
+        ).count()
+
+        active_internship_obj = Internship.objects.filter(
+            student=student_profile,
+            status=Internship.Status.IN_PROGRESS,
+        ).select_related('company').first()
+        if active_internship_obj:
+            active_internship = {
+                'id': active_internship_obj.id,
+                'company': active_internship_obj.company.name,
+                'status': active_internship_obj.get_status_display(),
+                'totalHours': active_internship_obj.total_hours,
+            }
+
+        for application in Application.objects.filter(
+            student=student_profile,
+        ).select_related('opportunity__company').order_by('-created_at')[:5]:
+            status_class = {
+                Application.Status.SENT: 'pending',
+                Application.Status.REVIEW: 'pending',
+                Application.Status.ACCEPTED: 'accepted',
+                Application.Status.REJECTED: 'rejected',
+            }.get(application.status, 'pending')
+            recent_applications.append({
+                'position': application.opportunity.title,
+                'company': application.opportunity.company.name,
+                'status': status_class,
+                'statusLabel': application.get_status_display(),
+            })
+
+    featured_opportunities = [
+        {
+            'id': opportunity.id,
+            'title': opportunity.title,
+            'company': opportunity.company.name,
+            'career': opportunity.career.name,
+            'vacancies': opportunity.vacancies,
+            'deadline': opportunity.deadline.isoformat(),
+            'url': f'/student/opportunities/?opportunity={opportunity.id}',
+        }
+        for opportunity in available_opportunities[:4]
+    ]
 
     return JsonResponse({
         'ok': True,
-        'totalApplications': total_applications,
-        'pendingApplications': pending_applications,
-        'acceptedApplications': accepted_applications,
+        'stats': {
+            'opportunities': available_opportunities_count,
+            'applications': total_applications,
+            'pending': pending_applications,
+            'accepted': accepted_applications,
+            'active': Internship.objects.filter(
+                student=student_profile,
+                status=Internship.Status.IN_PROGRESS,
+            ).count() if student_profile else 0,
+        },
+        'featuredOpportunities': featured_opportunities,
+        'recentApplications': recent_applications,
+        'milestones': [],
         'activeInternship': active_internship,
-        'availableOpportunities': available_opportunities,
-        'profileComplete': bool(student_profile.institution_id and student_profile.career_id),
+        'profileComplete': bool(
+            student_profile
+            and student_profile.institution_id
+            and student_profile.career_id
+        ),
     })
 
 @login_required(login_url='frontend:login')
 def internships_list(request):
     from internships.models import Opportunity, Application
+    from institutions.models import Institution, TechnicalCareer
 
     student_profile = getattr(request.user, 'student_profile', None)
 
@@ -130,6 +172,25 @@ def internships_list(request):
         status=Opportunity.Status.ACTIVE,
         deadline__gte=timezone.now(),
     ).select_related('company', 'career', 'institution').order_by('-created_at')
+
+    search = request.GET.get('search', '').strip()
+    modality = request.GET.get('modality', '').strip()
+    institution_id = request.GET.get('institution', '').strip()
+    career_id = request.GET.get('career', '').strip()
+
+    if search:
+        opportunities = opportunities.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(company__name__icontains=search)
+            | Q(career__name__icontains=search)
+        )
+    if modality in Opportunity.Modality.values:
+        opportunities = opportunities.filter(modality=modality)
+    if institution_id.isdigit():
+        opportunities = opportunities.filter(institution_id=int(institution_id))
+    if career_id.isdigit():
+        opportunities = opportunities.filter(career_id=int(career_id))
 
     applied_ids = set()
     if student_profile:
@@ -145,10 +206,31 @@ def internships_list(request):
             Application.objects.filter(student=student_profile).values_list('opportunity_id', flat=True)
         )
 
+    institutions = Institution.objects.filter(
+        is_active=True,
+        opportunities__status=Opportunity.Status.ACTIVE,
+        opportunities__deadline__gte=timezone.now(),
+    ).distinct().order_by('name')
+    careers = TechnicalCareer.objects.filter(
+        is_active=True,
+        opportunities__status=Opportunity.Status.ACTIVE,
+        opportunities__deadline__gte=timezone.now(),
+    ).distinct().order_by('name')
+
     context = {
         'opportunities': opportunities,
         'applied_ids': applied_ids,
         'has_profile': student_profile is not None,
+        'student_profile': student_profile,
+        'target_opportunity_id': request.GET.get('opportunity', ''),
+        'institutions': institutions,
+        'careers': careers,
+        'filters': {
+            'search': search,
+            'modality': modality,
+            'institution': institution_id,
+            'career': career_id,
+        },
     }
     return render(request, 'student/opportunities.html', context)
 
@@ -219,15 +301,20 @@ def my_applications(request):
     accepted_count = 0
     for app in applications_qs:
         applications.append({
+            'id': app.id,
             'company': app.opportunity.company.name,
             'position': app.opportunity.title,
             'status': app.get_status_display(),
             'status_class': status_class_map.get(app.status, 'pending'),
             'location': app.opportunity.get_modality_display(),
+            'career': app.opportunity.career.name,
             'applied_at': app.created_at,
             'updated_at': app.created_at,
             'deadline': app.opportunity.deadline,
             'description': app.opportunity.description,
+            'requirements': app.opportunity.requirements,
+            'vacancies': app.opportunity.vacancies,
+            'message': app.message,
         })
         if app.status == 'REVIEW' or app.status == 'SENT':
             review_count += 1
@@ -258,19 +345,58 @@ def my_internships(request):
 
 @login_required(login_url='frontend:login')
 def view_internship(request, internship_id):
-    from internships.models import Opportunity
-    internship = Opportunity.objects.filter(id=internship_id).first()
-    return render(request, 'student/internship_detail.html', {'internship': internship})
+    from internships.models import Internship
+    internship = get_object_or_404(
+        Internship.objects.select_related('company', 'supervisor', 'application__opportunity'),
+        id=internship_id,
+        student__user=request.user,
+    )
+    activities = internship.activities.select_related('created_by', 'validated_by').order_by('-date', '-created_at')
+    return render(request, 'student/internship_detail.html', {
+        'internship': internship,
+        'activities': activities,
+    })
 
 
 @login_required(login_url='frontend:login')
 def log_hours(request, internship_id):
-    """Lightweight endpoint for logging hours from the frontend.
-    Accepts POST requests with hours data and returns JSON OK; otherwise redirects back to dashboard."""
-    if request.method == 'POST':
-        # Placeholder: real implementation should validate and create HoursLog model entries
-        return JsonResponse({'ok': True})
-    return redirect('frontend:student-dashboard')
+    from internships.models import Activity, Internship
+    internship = get_object_or_404(
+        Internship,
+        id=internship_id,
+        student__user=request.user,
+    )
+    if request.method != 'POST':
+        return redirect('frontend:student-internship-detail', internship_id=internship.id)
+
+    date = request.POST.get('date') or timezone.localdate().isoformat()
+    description = request.POST.get('description', '').strip()
+    hours = request.POST.get('hours', '').strip()
+    if not description or not hours:
+        messages.error(request, 'Indica la fecha, las horas y una descripción.')
+        return redirect('frontend:student-internship-detail', internship_id=internship.id)
+    try:
+        activity_date = timezone.datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, 'La fecha indicada no es válida.')
+        return redirect('frontend:student-internship-detail', internship_id=internship.id)
+    try:
+        hours_value = float(hours)
+        if hours_value <= 0 or hours_value > 24:
+            raise ValueError
+    except ValueError:
+        messages.error(request, 'Las horas deben ser un número entre 0 y 24.')
+        return redirect('frontend:student-internship-detail', internship_id=internship.id)
+
+    Activity.objects.create(
+        internship=internship,
+        date=activity_date,
+        description=description,
+        hours=hours_value,
+        created_by=request.user,
+    )
+    messages.success(request, 'Horas registradas y enviadas para validación.')
+    return redirect('frontend:student-internship-detail', internship_id=internship.id)
 
 
 @login_required(login_url='frontend:login')
@@ -359,10 +485,21 @@ def company_internships(request, internship_id=None):
     company = getattr(request.user, 'company', None)
     internships = []
     active_offers = []
-    if company:
-        internships = Internship.objects.filter(company=company).select_related('student__user', 'supervisor', 'application__opportunity')
+    if company or request.user.is_staff or request.user.is_superuser:
+        internship_filter = {} if request.user.is_staff or request.user.is_superuser else {'company': company}
+        internships = Internship.objects.filter(**internship_filter).select_related('student__user', 'supervisor', 'application__opportunity')
+        if internship_id:
+            internship = get_object_or_404(
+                internships,
+                id=internship_id,
+            )
+            activities = internship.activities.select_related('created_by', 'validated_by').order_by('-date', '-created_at')
+            return render(request, 'company/internship_detail.html', {
+                'internship': internship,
+                'activities': activities,
+            })
         active_offers = Opportunity.objects.filter(
-            company=company,
+            **internship_filter,
             status=Opportunity.Status.ACTIVE,
             deadline__gte=timezone.now(),
         ).select_related('career').order_by('-created_at')
@@ -372,10 +509,51 @@ def company_internships(request, internship_id=None):
 
 @login_required(login_url='frontend:login')
 def company_offers(request):
+    from institutions.models import TechnicalCareer
     from internships.models import Opportunity
+
     company = getattr(request.user, 'company', None)
-    offers = Opportunity.objects.filter(company=company) if company else []
-    return render(request, 'company/offers.html', {'offers': offers})
+    offer_filter = {} if request.user.is_staff or request.user.is_superuser else {'company': company}
+    offers = Opportunity.objects.filter(**offer_filter).select_related(
+        'career', 'institution'
+    ).order_by('-created_at') if (company or offer_filter == {}) else Opportunity.objects.none()
+
+    search = request.GET.get('search', '').strip()
+    status = request.GET.get('status', '').strip()
+    modality = request.GET.get('modality', '').strip()
+    career_id = request.GET.get('career', '').strip()
+
+    if search:
+        offers = offers.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(career__name__icontains=search)
+        )
+    if status in Opportunity.Status.values:
+        offers = offers.filter(status=status)
+    if modality in Opportunity.Modality.values:
+        offers = offers.filter(modality=modality)
+    if career_id.isdigit():
+        offers = offers.filter(career_id=int(career_id))
+
+    careers = TechnicalCareer.objects.filter(
+        opportunities__company=company,
+        is_active=True,
+    ).distinct().order_by('name') if company else TechnicalCareer.objects.filter(
+        opportunities__isnull=False,
+        is_active=True,
+    ).distinct().order_by('name')
+    context = {
+        'offers': offers,
+        'careers': careers,
+        'filters': {
+            'search': search,
+            'status': status,
+            'modality': modality,
+            'career': career_id,
+        },
+    }
+    return render(request, 'company/offers.html', context)
 
 
 @login_required(login_url='frontend:login')
@@ -397,8 +575,57 @@ def applicants_view(request, offer_id):
 
 
 @login_required(login_url='frontend:login')
-def hours_validation(request):
-    return render(request, 'company/hours_validation.html')
+def hours_validation(request, internship_id=None):
+    from internships.models import Activity, Evaluation, Internship
+
+    internship_id = internship_id or request.GET.get('internship') or request.POST.get('internship_id')
+    if not internship_id:
+        return redirect('frontend:company-internships')
+    company = getattr(request.user, 'company', None)
+    internship_filter = {} if request.user.is_staff or request.user.is_superuser else {'company': company}
+    internship = get_object_or_404(Internship, id=internship_id, **internship_filter)
+
+    if request.method == 'POST':
+        activity_ids = request.POST.getlist('activity_ids')
+        comment = request.POST.get('comment', '').strip()
+        with transaction.atomic():
+            activities = Activity.objects.select_for_update().filter(
+                internship=internship,
+                id__in=activity_ids,
+                validated=False,
+            )
+            now = timezone.now()
+            activities.update(
+                validated=True,
+                validated_at=now,
+                validated_by=request.user,
+                validation_comment=comment,
+            )
+            internship.total_hours = internship.activities.filter(validated=True).aggregate(
+                total=Sum('hours')
+            )['total'] or 0
+            internship.save(update_fields=['total_hours'])
+
+            score = request.POST.get('score', '').strip() or '0'
+            Evaluation.objects.update_or_create(
+                internship=internship,
+                defaults={
+                    'score': score,
+                    'comments': comment,
+                    'result': request.POST.get('result', 'COMPLETED'),
+                    'evaluated_by': request.user,
+                },
+            )
+        messages.success(request, 'Las horas seleccionadas fueron validadas correctamente.')
+        return redirect('frontend:company-internship-evaluate', internship_id=internship.id)
+
+    activities = internship.activities.select_related('created_by', 'validated_by').order_by('-date', '-created_at')
+    evaluation = getattr(internship, 'evaluation', None)
+    return render(request, 'company/hours_validation.html', {
+        'internship': internship,
+        'activities': activities,
+        'evaluation': evaluation,
+    })
 
 
 @login_required(login_url='frontend:login')

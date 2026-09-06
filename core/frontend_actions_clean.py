@@ -1,11 +1,14 @@
+from datetime import timedelta
+from math import ceil
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from accounts.models import Role, User
 from companies.models import Company, Supervisor
-from internships.models import Opportunity
-from institutions.models import Institution, TechnicalCareer
+from internships.models import Opportunity, Application, Internship
+from institutions.models import Institution, TechnicalCareer, InstitutionConfig
 from django.utils import timezone
 
 from django.views.decorators.http import require_POST
@@ -172,6 +175,12 @@ def create_offer_view(request):
             messages.error(request, 'La cantidad de vacantes no es válida.')
             return render(request, 'company/create-offer.html')
 
+        try:
+            required_hours = max(1, int(request.POST.get('required_hours') or 0))
+        except ValueError:
+            messages.error(request, 'La cantidad de horas requeridas no es válida.')
+            return render(request, 'company/create-offer.html')
+
         supervisor = None
         if supervisor_email:
             supervisor, _ = Supervisor.objects.get_or_create(
@@ -188,6 +197,7 @@ def create_offer_view(request):
             description=description or 'Sin descripción',
             requirements=requirements_list,
             vacancies=vacancies,
+            required_hours=required_hours,
             modality=modality,
             deadline=deadline_dt,
             status=Opportunity.Status.ACTIVE
@@ -223,6 +233,10 @@ def edit_offer_view(request, offer_id):
         # Keep vacancies if not provided; fall back to current value
         try:
             opp.vacancies = int(request.POST.get('vacancies') or opp.vacancies)
+        except Exception:
+            pass
+        try:
+            opp.required_hours = max(1, int(request.POST.get('required_hours') or opp.required_hours))
         except Exception:
             pass
         loc_type = request.POST.get('location_type', 'on-site')
@@ -300,10 +314,11 @@ def company_offers_json(request):
     """Return a JSON list of offers that belong to the logged-in user's company."""
     user = request.user
     company = getattr(user, 'company', None)
-    if not company:
+    if not company and not (user.is_staff or user.is_superuser):
         return JsonResponse({'offers': []})
 
-    qs = Opportunity.objects.filter(company=company).order_by('-created_at')
+    qs = Opportunity.objects.all() if user.is_staff or user.is_superuser else Opportunity.objects.filter(company=company)
+    qs = qs.order_by('-created_at')[:4]
     offers = []
     for opp in qs:
         offers.append({
@@ -313,6 +328,7 @@ def company_offers_json(request):
             'modality': opp.get_modality_display() if hasattr(opp, 'get_modality_display') else opp.modality,
             'applicants': opp.applications.count() if hasattr(opp, 'applications') else 0,
             'vacancies': opp.vacancies,
+            'required_hours': getattr(opp, 'required_hours', 0),
             'status': opp.status,
         })
     return JsonResponse({'offers': offers})
@@ -326,16 +342,38 @@ def company_dashboard_json(request):
     """Return aggregate dashboard statistics for the logged-in company."""
     user = request.user
     company = getattr(user, 'company', None)
-    if not company:
+    is_global_company_admin = user.is_staff or user.is_superuser
+    if not company and not is_global_company_admin:
         return JsonResponse({'ok': True, 'activeOffers': 0, 'totalApplicants': 0, 'pendingReview': 0, 'activeInternships': 0, 'avgRating': 0})
 
-    active_offers = Opportunity.objects.filter(company=company, status=Opportunity.Status.ACTIVE).count()
-    total_applicants = Application.objects.filter(opportunity__company=company).count()
-    pending_review = Application.objects.filter(opportunity__company=company, status__in=[Application.Status.SENT, Application.Status.REVIEW]).count()
-    active_internships = Internship.objects.filter(company=company, status=Internship.Status.IN_PROGRESS).count()
+    opportunity_filter = {} if is_global_company_admin else {'company': company}
+    active_offers = Opportunity.objects.filter(
+        **opportunity_filter,
+        status=Opportunity.Status.ACTIVE,
+    ).count()
+    total_applicants = Application.objects.filter(
+        **({'opportunity__' + key: value for key, value in opportunity_filter.items()}),
+    ).count() if opportunity_filter else Application.objects.count()
+    pending_review = Application.objects.filter(
+        **({'opportunity__' + key: value for key, value in opportunity_filter.items()}),
+        status__in=[Application.Status.SENT, Application.Status.REVIEW],
+    ).count() if opportunity_filter else Application.objects.filter(
+        status__in=[Application.Status.SENT, Application.Status.REVIEW],
+    ).count()
+    active_internships = Internship.objects.filter(
+        **opportunity_filter,
+        status=Internship.Status.IN_PROGRESS,
+    ).count() if opportunity_filter else Internship.objects.filter(
+        status=Internship.Status.IN_PROGRESS,
+    ).count()
 
     # Acceptance metrics: accepted applications / total applications
-    accepted_applications = Application.objects.filter(opportunity__company=company, status=Application.Status.ACCEPTED).count()
+    accepted_applications = Application.objects.filter(
+        **({'opportunity__' + key: value for key, value in opportunity_filter.items()}),
+        status=Application.Status.ACCEPTED,
+    ).count() if opportunity_filter else Application.objects.filter(
+        status=Application.Status.ACCEPTED,
+    ).count()
     total_applications = total_applicants
     acceptance_rate = 0
     if total_applications:
@@ -348,7 +386,8 @@ def company_dashboard_json(request):
     avg_rating = None
     try:
         from evaluations.models import Evaluation as EvalModel
-        agg = EvalModel.objects.filter(internship__company=company).aggregate(avg=Avg('score'))
+        evaluation_filter = {'internship__company': company} if company else {}
+        agg = EvalModel.objects.filter(**evaluation_filter).aggregate(avg=Avg('score'))
         avg_rating = agg.get('avg') or 0
     except Exception:
         avg_rating = 0
@@ -377,10 +416,14 @@ def company_internships_json(request):
     """Return active internships (in progress) for the logged-in company as JSON."""
     user = request.user
     company = getattr(user, 'company', None)
-    if not company:
+    if not company and not (user.is_staff or user.is_superuser):
         return JsonResponse({'internships': []})
 
-    qs = Internship.objects.filter(company=company, status=Internship.Status.IN_PROGRESS).select_related('student__user', 'application__opportunity')
+    internship_filter = {} if user.is_staff or user.is_superuser else {'company': company}
+    qs = Internship.objects.filter(
+        **internship_filter,
+        status=Internship.Status.IN_PROGRESS,
+    ).select_related('student__user', 'application__opportunity')
     items = []
     for it in qs:
         student_name = it.student.user.get_full_name() or it.student.user.username
@@ -405,10 +448,20 @@ def company_pending_applicants_json(request):
     """Return pending applicants (applications with SENT or REVIEW) for the logged-in company's offers."""
     user = request.user
     company = getattr(user, 'company', None)
-    if not company:
+    if not company and not (user.is_staff or user.is_superuser):
         return JsonResponse({'applications': []})
 
-    qs = Application.objects.filter(opportunity__company=company, status__in=[Application.Status.SENT, Application.Status.REVIEW]).select_related('student__user', 'opportunity').order_by('-created_at')[:20]
+    application_filter = {} if user.is_staff or user.is_superuser else {'opportunity__company': company}
+    qs = Application.objects.filter(
+        **application_filter,
+        status__in=[Application.Status.SENT, Application.Status.REVIEW],
+    ).select_related(
+        'student__user',
+        'student__institution',
+        'student__career',
+        'opportunity__company',
+        'opportunity__career',
+    ).order_by('-created_at')[:20]
     applications = []
     for app in qs:
         student_name = app.student.user.get_full_name() or app.student.user.username
@@ -418,9 +471,74 @@ def company_pending_applicants_json(request):
             'position': app.opportunity.title if app.opportunity else '',
             'date': app.created_at.date().isoformat(),
             'rating': None,
+            'email': app.student.user.email,
+            'phone': app.student.phone,
+            'institution': app.student.institution.name,
+            'career': app.student.career.name,
+            'student_code': app.student.student_code,
+            'message': app.message,
+            'description': app.opportunity.description if app.opportunity else '',
+            'modality': app.opportunity.get_modality_display() if app.opportunity else '',
+            'vacancies': app.opportunity.vacancies if app.opportunity else 0,
+            'required_hours': app.opportunity.required_hours if app.opportunity else 0,
+            'requirements': app.opportunity.requirements if app.opportunity else [],
         })
 
     return JsonResponse({'applications': applications})
+
+
+@login_required(login_url='frontend:login')
+@require_POST
+def update_application_status(request, application_id):
+    user = request.user
+    application = get_object_or_404(Application.objects.select_related('opportunity'), id=application_id)
+    if not (user.is_staff or user.is_superuser or getattr(user, 'company_id', None) == application.opportunity.company_id):
+        return JsonResponse({'ok': False, 'error': 'No tienes permiso para gestionar esta postulación.'}, status=403)
+
+    status = request.POST.get('status')
+    if status not in {Application.Status.ACCEPTED, Application.Status.REJECTED}:
+        return JsonResponse({'ok': False, 'error': 'Estado de postulación no válido.'}, status=400)
+
+    application.status = status
+    application.save(update_fields=['status'])
+
+    if status == Application.Status.ACCEPTED:
+        required_hours = InstitutionConfig.objects.filter(
+            institution=application.opportunity.institution,
+        ).values_list('required_hours', flat=True).first() or 240
+        start_date = timezone.localdate()
+        end_date = start_date + timedelta(days=ceil(required_hours / 8))
+        supervisor, _ = Supervisor.objects.get_or_create(
+            company=application.opportunity.company,
+            full_name=f"Supervisor de {application.opportunity.company.name}",
+            defaults={
+                'position': 'Supervisor de Pasantías',
+                'email': application.opportunity.company.email or 'supervisor@skillbridge.local',
+                'phone': application.opportunity.company.phone,
+                'is_active': True,
+            },
+        )
+        internship, _ = Internship.objects.get_or_create(
+            application=application,
+            defaults={
+                'student': application.student,
+                'company': application.opportunity.company,
+                'supervisor': supervisor,
+                'start_date': start_date,
+                'end_date': end_date,
+                'status': Internship.Status.IN_PROGRESS,
+                'total_hours': 0,
+            },
+        )
+        if internship.end_date != end_date:
+            internship.end_date = end_date
+            internship.save(update_fields=['end_date'])
+
+    return JsonResponse({
+        'ok': True,
+        'status': application.get_status_display(),
+        'application_id': application.id,
+    })
 
 
 @login_required(login_url='frontend:login')

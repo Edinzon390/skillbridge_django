@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Evaluar pasantía{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Evaluar pasantía</h1>
+        <p>{{ internship.student.user.get_full_name|default:internship.student.user.username }}</p>
+    </div>
+    <a class="btn btn-outline" href="{% url 'frontend:company-internship-detail' internship.id %}">Ver historial</a>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="internship_id" value="{{ internship.id }}">
+    <div class="card">
+        <div class="card-header"><h2 class="card-title">Horas pendientes</h2></div>
+        <div class="card-body">
+            {% for activity in activities %}
+                <label style="display:block; padding:1rem 0; border-bottom:1px solid var(--border-color);">
+                    {% if not activity.validated %}
+                        <input type="checkbox" name="activity_ids" value="{{ activity.id }}">
+                    {% endif %}
+                    <strong>{{ activity.date|date:"d/m/Y" }} - {{ activity.hours }} horas</strong>
+                    <span class="badge {% if activity.validated %}badge-success{% else %}badge-warning{% endif %}">
+                        {% if activity.validated %}Validada {{ activity.validated_at|date:"d/m/Y H:i" }}{% else %}Pendiente{% endif %}
+                    </span>
+                    <p>{{ activity.description }}</p>
+                    {% if activity.validation_comment %}<p class="text-secondary">Comentario: {{ activity.validation_comment }}</p>{% endif %}
+                </label>
+            {% empty %}
+                <p>El pasante todavía no ha registrado horas.</p>
+            {% endfor %}
+
+            <label for="comment" style="display:block; margin-top:1rem;">Comentario de validación</label>
+            <textarea id="comment" name="comment" rows="4" style="width:100%;" placeholder="Escribe un comentario para el pasante"></textarea>
+
+            <details style="margin-top:1rem;">
+                <summary>Registrar evaluación general (opcional)</summary>
+                <label for="score">Puntuación</label>
+                <input id="score" name="score" type="number" min="0" max="100" step="0.01">
+                <input type="hidden" name="result" value="COMPLETED">
+            </details>
+
+            <button class="btn btn-primary" type="submit" style="margin-top:1rem;">Validar horas seleccionadas</button>
+            {% if evaluation %}
+                <p class="text-secondary" style="margin-top:1rem;">
+                    Evaluada el {{ evaluation.evaluated_at|date:"d/m/Y H:i" }}.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</form>
+{% endblock %}

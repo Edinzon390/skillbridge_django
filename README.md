@@ -21,9 +21,16 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py seed_institutions
+python manage.py seed_opportunities
 python manage.py createsuperuser
 python manage.py runserver
 ```
+
+El comando `seed_institutions` agrega instituciones y carreras técnicas de ejemplo
+de forma idempotente, por lo que puede ejecutarse nuevamente sin duplicar datos.
+El comando `seed_opportunities` agrega empresas validadas y oportunidades de ejemplo
+asociadas a esas instituciones y carreras, también sin duplicar datos.
 
 ## Estructura
 
