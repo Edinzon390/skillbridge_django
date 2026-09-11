@@ -29,6 +29,11 @@
                 <p class="font-semibold text-lg">{{ intern.total_hours }}</p>
             </div>
 
+            <div style="margin-bottom: 1rem;">
+                <p class="text-secondary text-sm">Fin esperado</p>
+                <p class="font-semibold">{% if intern.end_date %}{{ intern.end_date|date:"d/m/Y" }}{% else %}Por definir{% endif %}</p>
+            </div>
+
             <div class="progress-bar" style="margin-bottom: 1.5rem;">
                 <div class="progress-fill" style="width: {{ intern.progress|default:0 }}%; background: linear-gradient(90deg, var(--primary), var(--cyan));"></div>
             </div>

@@ -107,6 +107,7 @@
              Pasantías en Progreso
         </h2>
     </div>
+
     <div class="card-body">
         <div class="table-responsive">
             <table class="table">
@@ -132,41 +133,115 @@
     </div>
 </div>
 
-<!-- MÉTRICAS DE DESEMPEÑO -->
-<div class="card" style="margin-top: 2rem;">
-    <div class="card-header">
-        <h2 class="card-title">
-             Métricas de Desempeño
-        </h2>
-    </div>
-    <div class="card-body">
-        <div class="grid grid-2 grid-1-mobile">
-            <div>
-                <p class="font-semibold text-secondary" style="margin-bottom: 0.5rem;">
-                    Tasa de Aceptación de Ofertas
-                </p>
-                <div class="progress-bar" id="acceptance-bar">
-                    <div class="progress-fill" style="background: linear-gradient(90deg, var(--primary), var(--cyan)); width: 0%; transition: width 400ms ease;"></div>
-                </div>
-                <p class="text-secondary text-sm" style="margin-top: 0.3rem;" id="acceptance-text">0% (0 de 0 aplicaciones aceptadas)</p>
+<div id="applicant-review-modal" class="applicant-review-modal" hidden>
+    <div class="applicant-review-backdrop" data-close-applicant-review></div>
+    <section class="applicant-review-dialog" role="dialog" aria-modal="true" aria-labelledby="applicant-review-title">
+        <button type="button" class="applicant-review-close" data-close-applicant-review aria-label="Cerrar">&times;</button>
+        <h2 id="applicant-review-title">Revisión del aplicante</h2>
+        <div class="applicant-review-grid">
+            <div class="applicant-review-card">
+                <h3>Datos del estudiante</h3>
+                <p><strong id="review-name"></strong></p>
+                <p id="review-email"></p>
+                <p id="review-phone"></p>
+                <p id="review-institution"></p>
+                <p id="review-career"></p>
+                <p id="review-code"></p>
             </div>
-            <div>
-                <p class="font-semibold text-secondary" style="margin-bottom: 0.5rem;">
-                    Satisfacción de Estudiantes
-                </p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="background: linear-gradient(90deg, var(--success), var(--cyan)); width: 88%;"></div>
-                </div>
-                <p class="text-secondary text-sm" style="margin-top: 0.3rem;">4.4/5 estrellas</p>
+            <div class="applicant-review-card">
+                <h3>Postulación</h3>
+                <p><strong id="review-position"></strong></p>
+                <p id="review-modality"></p>
+                <p id="review-date"></p>
+                <p id="review-vacancies"></p>
+                <p id="review-hours"></p>
+                <p id="review-message"></p>
             </div>
         </div>
-    </div>
+        <h3>Descripción de la oferta</h3>
+        <p id="review-description"></p>
+        <h3>Requisitos</h3>
+        <ul id="review-requirements"></ul>
+        <div class="applicant-review-actions">
+            <button type="button" class="btn btn-danger" id="reject-applicant">Rechazar</button>
+            <button type="button" class="btn btn-success" id="accept-applicant">Aceptar postulante</button>
+        </div>
+    </section>
 </div>
+
+{% block extra_css %}
+<style>
+    .applicant-review-modal[hidden] { display: none !important; }
+    .applicant-review-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1100;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+    }
+    .applicant-review-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.62);
+    }
+    .applicant-review-dialog {
+        position: relative;
+        width: min(100%, 760px);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        box-shadow: var(--shadow-lg);
+    }
+    .applicant-review-dialog h2 { margin-top: 0; }
+    .applicant-review-dialog h3 { margin-top: 1.25rem; font-size: 1rem; }
+    .applicant-review-dialog p,
+    .applicant-review-dialog li { color: var(--text-secondary); }
+    .applicant-review-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        border: 0;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 1.8rem;
+    }
+    .applicant-review-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .applicant-review-card {
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--bg-soft);
+    }
+    .applicant-review-card h3 { margin-top: 0; }
+    .applicant-review-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    @media (max-width: 700px) {
+        .applicant-review-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
+let pendingApplicants = {};
+const applicantReviewModal = document.getElementById('applicant-review-modal');
+let selectedApplicantId = null;
+
 async function loadCompanyDashboard() {
     try {
         // Cargar estadísticas desde el servidor
@@ -229,7 +304,7 @@ async function loadMyOffers() {
                         <span class="badge ${statusBadge}">${statusText}</span>
                     </div>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.8rem;">
-                        ${offer.applicants} aplicantes • ${offer.vacancies}h requeridas
+                        ${offer.applicants} aplicantes • ${offer.required_hours || 0}h requeridas
                     </p>
                     <div class="table-actions">
                         <a href="/company/offers/${offer.id}/" class="btn btn-primary btn-small">Ver Detalles</a>
@@ -259,6 +334,7 @@ async function loadPendingApplicants() {
 
         let html = '';
         applicants.forEach(applicant => {
+            pendingApplicants[applicant.id] = applicant;
             html += `
                 <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
                     <div style="flex: 1;">
@@ -269,7 +345,7 @@ async function loadPendingApplicants() {
                         <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem;">
                             ${applicant.rating ? '⭐ '+applicant.rating : ''}
                         </p>
-                        <button class="btn btn-success btn-small" onclick="reviewApplicant(${applicant.id})">
+                        <button type="button" class="btn btn-success btn-small" onclick="reviewApplicant(event, ${applicant.id})">
                             Revisar
                         </button>
                     </div>
@@ -321,10 +397,80 @@ async function loadActiveInternships() {
     }
 }
 
-function reviewApplicant(applicantId) {
-    alert('Abriendo revisión del candidato ' + applicantId);
-    // Implementar modal de revisión
+function reviewApplicant(event, applicantId) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const applicant = pendingApplicants[applicantId];
+    if (!applicant || !applicantReviewModal) return;
+    selectedApplicantId = applicantId;
+
+    document.getElementById('review-name').textContent = applicant.name;
+    document.getElementById('review-email').textContent = `Correo: ${applicant.email || 'No registrado'}`;
+    document.getElementById('review-phone').textContent = `Teléfono: ${applicant.phone || 'No registrado'}`;
+    document.getElementById('review-institution').textContent = `Institución: ${applicant.institution}`;
+    document.getElementById('review-career').textContent = `Carrera: ${applicant.career}`;
+    document.getElementById('review-code').textContent = `Código: ${applicant.student_code}`;
+    document.getElementById('review-position').textContent = applicant.position;
+    document.getElementById('review-modality').textContent = `Formato de trabajo: ${applicant.modality}`;
+    document.getElementById('review-date').textContent = `Postulación: ${applicant.date}`;
+    document.getElementById('review-vacancies').textContent = `Vacantes: ${applicant.vacancies}`;
+    document.getElementById('review-hours').textContent = `Horas requeridas: ${applicant.required_hours || 0} h`;
+    document.getElementById('review-message').textContent = `Mensaje: ${applicant.message || 'Sin mensaje'}`;
+    document.getElementById('review-description').textContent = applicant.description;
+
+    const requirements = document.getElementById('review-requirements');
+    requirements.innerHTML = '';
+    (applicant.requirements || []).forEach((requirement) => {
+        const item = document.createElement('li');
+        item.textContent = requirement;
+        requirements.appendChild(item);
+    });
+    applicantReviewModal.hidden = false;
+    applicantReviewModal.setAttribute('aria-hidden', 'false');
+    applicantReviewModal.style.display = 'grid';
+    document.body.style.overflow = 'hidden';
 }
+
+async function updateApplicantStatus(status) {
+    if (!selectedApplicantId) return;
+    const formData = new FormData();
+    formData.append('status', status);
+    const response = await fetch(`/company/applications/${selectedApplicantId}/status/`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+        headers: {'X-CSRFToken': getCookie('csrftoken') || '{{ csrf_token }}'}
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+        throw new Error(result.error || 'No se pudo actualizar la postulación.');
+    }
+    closeApplicantReview();
+    loadPendingApplicants();
+    loadCompanyDashboard();
+}
+
+function getCookie(name) {
+    const cookie = document.cookie.split('; ').find((row) => row.startsWith(`${name}=`));
+    return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
+}
+
+function closeApplicantReview() {
+    if (!applicantReviewModal) return;
+    applicantReviewModal.hidden = true;
+    applicantReviewModal.setAttribute('aria-hidden', 'true');
+    applicantReviewModal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.getElementById('accept-applicant').addEventListener('click', () => {
+    updateApplicantStatus('ACCEPTED').catch((error) => alert(error.message));
+});
+document.getElementById('reject-applicant').addEventListener('click', () => {
+    updateApplicantStatus('REJECTED').catch((error) => alert(error.message));
+});
 
 function exportReport() {
     alert('Exportando reporte...');
@@ -333,5 +479,8 @@ function exportReport() {
 
 // Cargar datos al abrir la página
 document.addEventListener('DOMContentLoaded', loadCompanyDashboard);
+document.querySelectorAll('[data-close-applicant-review]').forEach((element) => {
+    element.addEventListener('click', closeApplicantReview);
+});
 </script>
 {% endblock %}

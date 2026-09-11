@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de pasantía{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Historial de pasantía</h1>
+        <p>{{ internship.student.user.get_full_name|default:internship.student.user.username }} - {{ internship.application.opportunity.title }}</p>
+    </div>
+    <a class="btn btn-outline" href="{% url 'frontend:company-internships' %}">Volver</a>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-body">
+        <p><strong>Horas validadas:</strong> {{ internship.total_hours }}</p>
+        <p><strong>Estado:</strong> {{ internship.get_status_display }}</p>
+        <p><strong>Inicio:</strong> {{ internship.start_date|date:"d/m/Y"|default:"Por definir" }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title">Historial de horas</h2></div>
+    <div class="card-body">
+        {% for activity in activities %}
+            <div style="padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; gap:1rem;">
+                    <strong>{{ activity.date|date:"d/m/Y" }} - {{ activity.hours }} horas</strong>
+                    {% if activity.validated %}
+                        <span class="badge badge-success">Validada {{ activity.validated_at|date:"d/m/Y H:i" }}</span>
+                    {% else %}
+                        <span class="badge badge-warning">Pendiente de validación</span>
+                    {% endif %}
+                </div>
+                <p>{{ activity.description }}</p>
+                {% if activity.validation_comment %}
+                    <p class="text-secondary"><strong>Comentario:</strong> {{ activity.validation_comment }}</p>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No hay horas registradas todavía.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

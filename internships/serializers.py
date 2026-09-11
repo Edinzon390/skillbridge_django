@@ -37,14 +37,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
         return ''
 
     def get_required_hours(self, obj):
-        # Opportunity model doesn't store required_hours explicitly; try to infer from vacancies
-        try:
-            v = getattr(obj, 'vacancies', None)
-            if v:
-                return int(v) * 160
-        except Exception:
-            pass
-        return None
+        return getattr(obj, 'required_hours', 0) or 0
 
     def get_applicants_count(self, obj):
         return obj.applications.count() if hasattr(obj, 'applications') else 0
@@ -131,8 +124,21 @@ class InternshipSerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ['id', 'internship', 'date', 'description', 'hours', 'validated', 'created_by', 'created_at']
-        read_only_fields = ['id', 'validated', 'created_by', 'created_at']
+        fields = ['id', 'internship', 'date', 'description', 'hours', 'validated', 'validated_at', 'validation_comment', 'validated_by', 'created_by', 'created_at']
+        read_only_fields = [
+            'id', 'validated', 'validated_at', 'validation_comment',
+            'validated_by', 'created_by', 'created_at',
+        ]
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        student = getattr(user, 'student_profile', None)
+        if not student or attrs['internship'].student_id != student.id:
+            raise serializers.ValidationError(
+                {'internship': 'Solo puedes registrar horas de tu propia pasantía.'}
+            )
+        return attrs
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -141,8 +147,4 @@ class ActivitySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'detail': 'Authentication required.'})
         validated_data['created_by'] = user
         activity = Activity.objects.create(**validated_data)
-        # Update internship total_hours (sum of validated activities only; keep simple: add submitted hours)
-        internship = activity.internship
-        internship.total_hours = internship.total_hours + int(activity.hours)
-        internship.save()
         return activity

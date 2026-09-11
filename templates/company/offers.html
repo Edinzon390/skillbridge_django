@@ -12,6 +12,49 @@
     </a>
 </div>
 
+<form method="get" class="card filters-card" style="margin-bottom: 2rem;">
+    <div class="filters-grid">
+        <div class="form-group">
+            <label for="offer-search">Buscar</label>
+            <input id="offer-search" name="search" type="search" class="form-input"
+                   value="{{ filters.search }}" placeholder="Título o descripción">
+        </div>
+        <div class="form-group">
+            <label for="offer-status">Estado</label>
+            <select id="offer-status" name="status" class="form-input">
+                <option value="">Todos los estados</option>
+                <option value="ACTIVE" {% if filters.status == 'ACTIVE' %}selected{% endif %}>Activa</option>
+                <option value="PAUSED" {% if filters.status == 'PAUSED' %}selected{% endif %}>Inactiva</option>
+                <option value="CANCELLED" {% if filters.status == 'CANCELLED' %}selected{% endif %}>Cancelada</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="offer-modality">Formato de trabajo</label>
+            <select id="offer-modality" name="modality" class="form-input">
+                <option value="">Todos los formatos</option>
+                <option value="PRESENTIAL" {% if filters.modality == 'PRESENTIAL' %}selected{% endif %}>Presencial (oficina)</option>
+                <option value="REMOTE" {% if filters.modality == 'REMOTE' %}selected{% endif %}>Remoto (virtual)</option>
+                <option value="HYBRID" {% if filters.modality == 'HYBRID' %}selected{% endif %}>Híbrido (mixto)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="offer-career">Carrera</label>
+            <select id="offer-career" name="career" class="form-input">
+                <option value="">Todas las carreras</option>
+                {% for career in careers %}
+                <option value="{{ career.id }}" {% if filters.career == career.id|stringformat:'s' %}selected{% endif %}>
+                    {{ career.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="button-group">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">Limpiar</a>
+    </div>
+</form>
+
 {% if offers %}
 <div class="offers-list">
     {% for offer in offers %}
@@ -19,13 +62,21 @@
         <div class="card-header">
             <div>
                 <h3 class="card-title">{{ offer.title }}</h3>
-                <p class="text-secondary text-sm">Modalidad: {{ offer.get_modality_display }}</p>
+                <p class="text-secondary text-sm">Formato de trabajo: {{ offer.get_modality_display }}</p>
             </div>
             {% if offer.status == 'CANCELLED' %}
             <span class="badge badge-warning">Cancelada</span>
+            {% elif offer.status == 'PAUSED' %}
+            <span class="badge badge-warning">Inactiva</span>
             {% else %}
-            <span class="badge badge-success">Activa</span>
+            <form method="post" action="{% url 'frontend:delete-offer' offer.id %}">
+               {% csrf_token %}
+               <button class="badge badge-success" type="submit"
+                       onclick="return confirm('¿Marcar esta oferta como cancelada?')">
+                   Activa
+               </button>
             {% endif %}
+            {% if offer.status == 'ACTIVE' %}</form>{% endif %}
         </div>
         <div class="card-body">
             <p class="text-secondary" style="margin-bottom: 1rem;">{{ offer.description|truncatechars:200 }}</p>
@@ -41,6 +92,12 @@
                 <a class="btn btn-secondary btn-small" href="{% url 'frontend:company-offer-applicants' offer.id %}">
                      Aplicantes ({{ offer.applications.count }})
                 </a>
+                <form method="post" action="{% url 'frontend:toggle-offer-status' offer.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button class="btn btn-small {% if offer.status == 'ACTIVE' %}btn-outline{% else %}btn-primary{% endif %}" type="submit">
+                        {% if offer.status == 'ACTIVE' %}Marcar inactiva{% else %}Marcar activa{% endif %}
+                    </button>
+                </form>
                 <form method="post" action="{% url 'frontend:delete-offer' offer.id %}" style="display:inline">
                     {% csrf_token %}
                     <button class="btn btn-danger btn-small" type="submit" onclick="return confirm('¿Cancelar esta oferta? Esta acción marcará la oferta como cancelada.')">
@@ -55,10 +112,13 @@
 </div>
 {% else %}
 <div class="placeholder-card">
-    
-    <h3>No hay ofertas publicadas</h3>
-    <p>Crea tu primera oferta de pasantía para empezar a recibir aplicaciones de estudiantes.</p>
+    <h3>{% if filters.search or filters.status or filters.modality or filters.career %}No se encontraron ofertas{% else %}No hay ofertas publicadas{% endif %}</h3>
+    <p>{% if filters.search or filters.status or filters.modality or filters.career %}Prueba con otros filtros para encontrar tus ofertas.{% else %}Crea tu primera oferta de pasantía para empezar a recibir aplicaciones de estudiantes.{% endif %}</p>
+    {% if filters.search or filters.status or filters.modality or filters.career %}
+    <a href="{% url 'frontend:company-offers' %}" class="btn btn-outline">Limpiar filtros</a>
+    {% else %}
     <a href="{% url 'frontend:create-offer' %}" class="btn btn-primary">Crear nueva oferta</a>
+    {% endif %}
 </div>
 {% endif %}
 

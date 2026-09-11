@@ -190,10 +190,10 @@ class InternshipViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def add_hours(self, request, pk=None):
         internship = self.get_object()
-        # Only student of internship or company supervisor/staff can add hours via activity
+        # Hours are submitted by the student and remain pending until the company validates them.
         user = request.user
         student = getattr(user, 'student_profile', None)
-        if not (user.is_staff or user.is_superuser or (student and internship.student_id == student.id) or (hasattr(user, 'company') and user.company and internship.company_id == user.company.id)):
+        if not (student and internship.student_id == student.id):
             return Response({'detail': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
         hours = request.data.get('hours')
         description = request.data.get('description', '')
@@ -204,6 +204,4 @@ class InternshipViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception:
             return Response({'detail': 'invalid hours'}, status=status.HTTP_400_BAD_REQUEST)
         activity = Activity.objects.create(internship=internship, hours=hours_val, description=description, created_by=user)
-        internship.total_hours = internship.total_hours + int(hours_val)
-        internship.save()
         return Response({'ok': True, 'activity_id': activity.id}, status=status.HTTP_201_CREATED)
