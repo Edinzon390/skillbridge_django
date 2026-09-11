@@ -182,6 +182,12 @@ def apply_to_opportunity(request, opportunity_id):
     )
 
     try:
+        # A complete student profile is enough to apply from the opportunities page.
+        # Keep the eligibility flag synchronized for older profiles created before
+        # this application flow was enabled.
+        if not student_profile.is_eligible:
+            student_profile.is_eligible = True
+            student_profile.save(update_fields=['is_eligible'])
         application.full_clean()
         application.save()
         messages.success(request, f'Tu postulación a "{opportunity.title}" fue enviada correctamente.')
