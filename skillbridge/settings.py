@@ -11,12 +11,12 @@ ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS",
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
+    "core.mongo_apps.MongoAdminConfig",
+    "core.mongo_apps.MongoAuthConfig",
+    "core.mongo_apps.MongoContentTypesConfig",
+    "core.mongo_apps.MongoSessionsConfig",
+    "core.mongo_apps.MongoMessagesConfig",
+    "core.mongo_apps.MongoStaticFilesConfig",
     "rest_framework",
     "django_filters",
     "accounts",
