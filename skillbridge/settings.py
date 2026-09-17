@@ -11,12 +11,12 @@ ALLOWED_HOSTS = [host.strip() for host in os.environ.get("DJANGO_ALLOWED_HOSTS",
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
 
 INSTALLED_APPS = [
-    "core.mongo_apps.MongoAdminConfig",
-    "core.mongo_apps.MongoAuthConfig",
-    "core.mongo_apps.MongoContentTypesConfig",
-    "core.mongo_apps.MongoSessionsConfig",
-    "core.mongo_apps.MongoMessagesConfig",
-    "core.mongo_apps.MongoStaticFilesConfig",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     "rest_framework",
     "django_filters",
     "accounts",
@@ -53,21 +53,12 @@ TEMPLATES = [{
 WSGI_APPLICATION = "skillbridge.wsgi.application"
 ASGI_APPLICATION = "skillbridge.asgi.application"
 
-if os.environ.get("MONGODB_URI"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django_mongodb_backend",
-            "NAME": os.environ.get("MONGODB_NAME", "skillbridge"),
-            "HOST": os.environ["MONGODB_URI"],
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+}
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -87,7 +78,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
