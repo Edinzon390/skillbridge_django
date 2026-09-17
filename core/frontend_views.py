@@ -264,14 +264,10 @@ def apply_to_opportunity(request, opportunity_id):
     )
 
     try:
-<<<<<<< HEAD
         # A complete student profile is enough to apply from the opportunities page.
         # Keep the eligibility flag synchronized for older profiles created before
         # this application flow was enabled.
         if not student_profile.is_eligible:
-=======
-        if not student_profile.is_eligible and student_profile.institution_id and student_profile.career_id and student_profile.student_code:
->>>>>>> 417d5cb2f32711bd2438cda3713821078f2a8812
             student_profile.is_eligible = True
             student_profile.save(update_fields=['is_eligible'])
         application.full_clean()

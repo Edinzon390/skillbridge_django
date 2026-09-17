@@ -159,6 +159,7 @@ class Command(BaseCommand):
                     "description": opportunity_data["description"],
                     "requirements": opportunity_data["requirements"],
                     "vacancies": opportunity_data["vacancies"],
+                    "required_hours": opportunity_data.get("required_hours", 240),
                     "modality": opportunity_data["modality"],
                     "deadline": deadline,
                     "status": Opportunity.Status.ACTIVE,
