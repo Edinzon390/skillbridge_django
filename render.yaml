@@ -2,7 +2,7 @@ services:
   - type: web
     name: skillbridge
     runtime: python
-    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py seed_institutions && python manage.py seed_opportunities && python manage.py create_company_admin
+    buildCommand: pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py seed_demo_data && python manage.py seed_opportunities
     startCommand: gunicorn skillbridge.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DJANGO_SECRET_KEY
