@@ -26,7 +26,7 @@ class AuditLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="audit_logs")
     action = models.CharField(max_length=100)
     entity = models.CharField(max_length=100)
-    object_id = models.PositiveBigIntegerField(null=True, blank=True)
+    object_id = models.CharField(max_length=100, null=True, blank=True)
     details = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

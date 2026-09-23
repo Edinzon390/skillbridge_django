@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
+from datetime import timedelta
 
 from .frontend_actions_clean import get_dashboard_redirect_url, register_submit, create_offer_view, edit_offer_view, company_profile_view, save_chat_message
 
@@ -160,6 +161,69 @@ def student_dashboard_json(request):
             and student_profile.career_id
         ),
     })
+
+def _opportunity_area_key(area_name):
+    normalized = (area_name or '').strip().lower()
+    if 'front' in normalized:
+        return 'frontend'
+    if 'back' in normalized:
+        return 'backend'
+    if 'full' in normalized or 'stack' in normalized:
+        return 'fullstack'
+    if 'devops' in normalized or 'ops' in normalized:
+        return 'devops'
+    if 'qa' in normalized or 'quality' in normalized:
+        return 'qa'
+    if 'data' in normalized or 'science' in normalized:
+        return 'datascience'
+    return 'backend'
+
+
+def _serialize_opportunity_for_frontend(opportunity):
+    company = opportunity.company
+    career = opportunity.career
+    institution = opportunity.institution
+    institution_config = getattr(institution, 'config', None)
+
+    location_name = 'Bogotá'
+    location_key = 'bogota'
+    modality_text = (opportunity.modality or '').lower()
+    if 'remote' in modality_text:
+        location_name = 'Remoto'
+        location_key = 'remoto'
+    else:
+        address = (company.address or '').lower()
+        if 'medell' in address:
+            location_name = 'Medellín'
+            location_key = 'medellin'
+        elif 'cali' in address:
+            location_name = 'Cali'
+            location_key = 'cali'
+        elif 'barranquilla' in address:
+            location_name = 'Barranquilla'
+            location_key = 'barranquilla'
+
+    area_name = career.name if career else 'General'
+    area_key = _opportunity_area_key(area_name)
+    required_hours = getattr(institution_config, 'required_hours', None) or 160
+
+    return {
+        'id': str(opportunity.id),
+        'position': opportunity.title,
+        'company': company.name,
+        'company_description': company.website or company.address or company.name,
+        'location': location_name,
+        'location_key': location_key,
+        'area': area_name,
+        'area_key': area_key,
+        'required_hours': int(required_hours),
+        'deadline': opportunity.deadline.isoformat() if opportunity.deadline else (opportunity.created_at + timedelta(days=30)).isoformat(),
+        'description': opportunity.description or 'Sin descripción disponible.',
+        'required_skills': list(opportunity.requirements or []),
+        'applicants_count': opportunity.applications.count(),
+        'created_at': opportunity.created_at.isoformat(),
+    }
+
 
 @login_required(login_url='frontend:login')
 def internships_list(request):
