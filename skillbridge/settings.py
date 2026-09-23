@@ -1,10 +1,28 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-import os
+from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _normalize_mongodb_uri(uri):
+    """Escape MongoDB credentials while preserving the rest of the URI."""
+    parsed = urlsplit(uri)
+    if not parsed.username:
+        return uri
+
+    username = quote(unquote(parsed.username), safe="")
+    password = ""
+    if parsed.password is not None:
+        password = f":{quote(unquote(parsed.password), safe='')}"
+
+    host = f"{username}{password}@{parsed.hostname}"
+    if parsed.port is not None:
+        host = f"{host}:{parsed.port}"
+
+    return urlunsplit((parsed.scheme, host, parsed.path, parsed.query, parsed.fragment))
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
@@ -59,9 +77,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django_mongodb_backend",
         "NAME": os.getenv("MONGODB_DATABASE", "Pasantia"),
-        "HOST": os.getenv(
-            "MONGODB_URI",
-            "mongodb://localhost:27017",
+        "HOST": _normalize_mongodb_uri(
+            os.getenv("MONGODB_URI", "mongodb://localhost:27017")
         ),
     }
 }
