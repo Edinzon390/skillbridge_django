@@ -104,7 +104,7 @@ def student_dashboard_json(request):
         ).select_related('company').first()
         if active_internship_obj:
             active_internship = {
-                'id': active_internship_obj.id,
+                'id': str(active_internship_obj.id),
                 'company': active_internship_obj.company.name,
                 'status': active_internship_obj.get_status_display(),
                 'totalHours': active_internship_obj.total_hours,
@@ -128,7 +128,7 @@ def student_dashboard_json(request):
 
     featured_opportunities = [
         {
-            'id': opportunity.id,
+            'id': str(opportunity.id),
             'title': opportunity.title,
             'company': opportunity.company.name,
             'career': opportunity.career.name,

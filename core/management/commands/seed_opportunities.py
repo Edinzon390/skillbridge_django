@@ -125,24 +125,27 @@ class Command(BaseCommand):
         opportunities_created = 0
         companies_created = 0
         deadline = timezone.now() + timedelta(days=45)
+        example_company_data = SAMPLE_OPPORTUNITIES[0]["company"]
+        example_company, company_created = Company.objects.get_or_create(
+            name=example_company_data["name"],
+            defaults={
+                **{key: value for key, value in example_company_data.items() if key != "name"},
+                "is_validated": True,
+                "is_active": True,
+            },
+        )
+        for field, value in example_company_data.items():
+            if field != "name":
+                setattr(example_company, field, value)
+        example_company.is_validated = True
+        example_company.is_active = True
+        example_company.save()
+        companies_created += int(company_created)
+
+        Opportunity.objects.exclude(company=example_company).update(company=example_company)
 
         for opportunity_data in SAMPLE_OPPORTUNITIES:
-            company_data = opportunity_data["company"]
-            company, created = Company.objects.get_or_create(
-                name=company_data["name"],
-                defaults={
-                    **{key: value for key, value in company_data.items() if key != "name"},
-                    "is_validated": True,
-                    "is_active": True,
-                },
-            )
-            for field, value in company_data.items():
-                if field != "name":
-                    setattr(company, field, value)
-            company.is_validated = True
-            company.is_active = True
-            company.save()
-            companies_created += int(created)
+            company = example_company
 
             career = TechnicalCareer.objects.filter(
                 name=opportunity_data["career"],

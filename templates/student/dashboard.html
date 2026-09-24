@@ -159,7 +159,10 @@
 <script>
 async function loadDashboardData() {
     try {
-        const response = await fetch('{% url "frontend:student-dashboard-json" %}', { credentials: 'same-origin' });
+        const response = await fetch('{% url "frontend:student-dashboard-json" %}?_=${Date.now()}`, {
+            credentials: 'same-origin',
+            cache: 'no-store',
+        });
         if (!response.ok) {
             throw new Error('No se pudo cargar el dashboard');
         }
