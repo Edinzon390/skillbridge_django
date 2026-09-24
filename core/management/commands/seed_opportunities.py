@@ -159,29 +159,37 @@ class Command(BaseCommand):
                 )
                 raise RuntimeError("No se puede crear la oportunidad sin una carrera válida.")
 
-            opportunity, created = Opportunity.objects.get_or_create(
+            matching_opportunities = Opportunity.objects.filter(
                 company=company,
                 institution=career.institution,
                 career=career,
                 title=opportunity_data["title"],
-                defaults={
-                    "description": opportunity_data["description"],
-                    "requirements": opportunity_data["requirements"],
-                    "vacancies": opportunity_data["vacancies"],
-                    "required_hours": opportunity_data.get("required_hours", 240),
-                    "modality": opportunity_data["modality"],
-                    "deadline": deadline,
-                    "status": Opportunity.Status.ACTIVE,
-                },
-            )
-            opportunity.description = opportunity_data["description"]
-            opportunity.requirements = opportunity_data["requirements"]
-            opportunity.vacancies = opportunity_data["vacancies"]
-            opportunity.required_hours = opportunity_data.get("required_hours", 240)
-            opportunity.modality = opportunity_data["modality"]
-            opportunity.deadline = deadline
-            opportunity.status = Opportunity.Status.ACTIVE
-            opportunity.save()
+            ).order_by("created_at")
+            created = not matching_opportunities.exists()
+            if created:
+                opportunity = Opportunity.objects.create(
+                    company=company,
+                    institution=career.institution,
+                    career=career,
+                    title=opportunity_data["title"],
+                    description=opportunity_data["description"],
+                    requirements=opportunity_data["requirements"],
+                    vacancies=opportunity_data["vacancies"],
+                    required_hours=opportunity_data.get("required_hours", 240),
+                    modality=opportunity_data["modality"],
+                    deadline=deadline,
+                    status=Opportunity.Status.ACTIVE,
+                )
+            else:
+                for opportunity in matching_opportunities:
+                    opportunity.description = opportunity_data["description"]
+                    opportunity.requirements = opportunity_data["requirements"]
+                    opportunity.vacancies = opportunity_data["vacancies"]
+                    opportunity.required_hours = opportunity_data.get("required_hours", 240)
+                    opportunity.modality = opportunity_data["modality"]
+                    opportunity.deadline = deadline
+                    opportunity.status = Opportunity.Status.ACTIVE
+                    opportunity.save()
             opportunities_created += int(created)
 
         self.stdout.write(
