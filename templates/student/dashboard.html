@@ -159,7 +159,7 @@
 <script>
 async function loadDashboardData() {
     try {
-        const response = await fetch('{% url "frontend:student-dashboard-json" %}?_=${Date.now()}`, {
+        const response = await fetch(`{% url "frontend:student-dashboard-json" %}?_=${Date.now()}`, {
             credentials: 'same-origin',
             cache: 'no-store',
         });

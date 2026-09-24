@@ -126,8 +126,9 @@ def student_dashboard_json(request):
                 'statusLabel': application.get_status_display(),
             })
 
-    featured_opportunities = [
-        {
+    featured_opportunities = []
+    for opportunity in available_opportunities[:4]:
+        featured_opportunities.append({
             'id': str(opportunity.id),
             'title': opportunity.title,
             'company': opportunity.company.name,
@@ -135,9 +136,7 @@ def student_dashboard_json(request):
             'vacancies': opportunity.vacancies,
             'deadline': opportunity.deadline.isoformat(),
             'url': f'/student/opportunities/?opportunity={opportunity.id}',
-        }
-        for opportunity in available_opportunities[:4]
-    ]
+        })
 
     response = JsonResponse({
         'ok': True,
