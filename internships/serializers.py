@@ -1,14 +1,27 @@
 from rest_framework import serializers
-from .models import Opportunity, Application, Internship, Activity
-from companies.models import Company
+from .models import Opportunity, Application, Internship, Activity, StudentProfile
+from companies.models import Company, Supervisor
 from institutions.models import Institution, TechnicalCareer
 from django.utils import timezone
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
-    institution = serializers.PrimaryKeyRelatedField(queryset=Institution.objects.all(), required=False)
-    company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), required=False)
-    career = serializers.PrimaryKeyRelatedField(queryset=TechnicalCareer.objects.all(), required=False)
+    id = serializers.CharField(read_only=True)
+    institution = serializers.PrimaryKeyRelatedField(
+        queryset=Institution.objects.all(),
+        required=False,
+        pk_field=serializers.CharField(),
+    )
+    company = serializers.PrimaryKeyRelatedField(
+        queryset=Company.objects.all(),
+        required=False,
+        pk_field=serializers.CharField(),
+    )
+    career = serializers.PrimaryKeyRelatedField(
+        queryset=TechnicalCareer.objects.all(),
+        required=False,
+        pk_field=serializers.CharField(),
+    )
 
     # Extra read-only fields to make frontend rendering simpler
     company_name = serializers.SerializerMethodField()
@@ -93,7 +106,11 @@ class OpportunitySerializer(serializers.ModelSerializer):
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
-    opportunity = serializers.PrimaryKeyRelatedField(queryset=Opportunity.objects.filter(status='ACTIVE'))
+    id = serializers.CharField(read_only=True)
+    opportunity = serializers.PrimaryKeyRelatedField(
+        queryset=Opportunity.objects.filter(status='ACTIVE'),
+        pk_field=serializers.CharField(),
+    )
 
     class Meta:
         model = Application
@@ -115,6 +132,24 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
 
 class InternshipSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+    application = serializers.PrimaryKeyRelatedField(
+        queryset=Application.objects.all(),
+        pk_field=serializers.CharField(),
+    )
+    student = serializers.PrimaryKeyRelatedField(
+        queryset=StudentProfile.objects.all(),
+        pk_field=serializers.CharField(),
+    )
+    company = serializers.PrimaryKeyRelatedField(
+        queryset=Company.objects.all(),
+        pk_field=serializers.CharField(),
+    )
+    supervisor = serializers.PrimaryKeyRelatedField(
+        queryset=Supervisor.objects.all(),
+        pk_field=serializers.CharField(),
+    )
+
     class Meta:
         model = Internship
         fields = ['id', 'application', 'student', 'company', 'supervisor', 'start_date', 'end_date', 'status', 'total_hours', 'created_at']
@@ -122,6 +157,12 @@ class InternshipSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+    internship = serializers.PrimaryKeyRelatedField(
+        queryset=Internship.objects.all(),
+        pk_field=serializers.CharField(),
+    )
+
     class Meta:
         model = Activity
         fields = ['id', 'internship', 'date', 'description', 'hours', 'validated', 'validated_at', 'validation_comment', 'validated_by', 'created_by', 'created_at']

@@ -88,13 +88,21 @@ class Command(BaseCommand):
                 },
             )
             institutions_created += int(created)
+            institution.email = institution_data["email"]
+            institution.phone = institution_data["phone"]
+            institution.address = institution_data["address"]
+            institution.is_active = True
+            institution.save()
 
             for career_name, description in careers:
-                _, created = TechnicalCareer.objects.get_or_create(
+                career, created = TechnicalCareer.objects.get_or_create(
                     institution=institution,
                     name=career_name,
                     defaults={"description": description, "is_active": True},
                 )
+                career.description = description
+                career.is_active = True
+                career.save()
                 careers_created += int(created)
 
         self.stdout.write(

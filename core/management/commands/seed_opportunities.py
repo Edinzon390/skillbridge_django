@@ -13,13 +13,13 @@ from internships.models import Opportunity
 SAMPLE_OPPORTUNITIES = (
     {
         "company": {
-            "name": "Caribe Digital Solutions",
-            "legal_name": "Caribe Digital Solutions SRL",
-            "tax_id": "CDS-001",
-            "email": "talento@caribedigital.example",
-            "phone": "+1-809-555-0201",
-            "address": "Av. Winston Churchill 180, Santo Domingo",
-            "website": "https://caribedigital.example",
+            "name": "Empresa Ejemplo S.A.",
+            "legal_name": "Empresa Ejemplo S.A.",
+            "tax_id": "EJ-2026-001",
+            "email": "contacto@empresa-ejemplo.com",
+            "phone": "+1-809-555-0200",
+            "address": "Av. Winston Churchill 100, Santo Domingo",
+            "website": "https://empresa-ejemplo.com",
         },
         "title": "Pasante de Desarrollo Web",
         "career": "Desarrollo de Software",
@@ -136,6 +136,12 @@ class Command(BaseCommand):
                     "is_active": True,
                 },
             )
+            for field, value in company_data.items():
+                if field != "name":
+                    setattr(company, field, value)
+            company.is_validated = True
+            company.is_active = True
+            company.save()
             companies_created += int(created)
 
             career = TechnicalCareer.objects.filter(
@@ -150,7 +156,7 @@ class Command(BaseCommand):
                 )
                 raise RuntimeError("No se puede crear la oportunidad sin una carrera válida.")
 
-            _, created = Opportunity.objects.get_or_create(
+            opportunity, created = Opportunity.objects.get_or_create(
                 company=company,
                 institution=career.institution,
                 career=career,
@@ -165,6 +171,14 @@ class Command(BaseCommand):
                     "status": Opportunity.Status.ACTIVE,
                 },
             )
+            opportunity.description = opportunity_data["description"]
+            opportunity.requirements = opportunity_data["requirements"]
+            opportunity.vacancies = opportunity_data["vacancies"]
+            opportunity.required_hours = opportunity_data.get("required_hours", 240)
+            opportunity.modality = opportunity_data["modality"]
+            opportunity.deadline = deadline
+            opportunity.status = Opportunity.Status.ACTIVE
+            opportunity.save()
             opportunities_created += int(created)
 
         self.stdout.write(

@@ -8,6 +8,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         call_command("seed_institutions")
         call_command("create_company_admin")
+        call_command("seed_opportunities")
         self.stdout.write(
             self.style.SUCCESS("Datos de demostración creados o actualizados correctamente.")
         )
