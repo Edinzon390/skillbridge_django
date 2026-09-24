@@ -343,7 +343,9 @@ def company_offers_json(request):
             'required_hours': getattr(opp, 'required_hours', 0),
             'status': opp.status,
         })
-    return JsonResponse({'offers': offers})
+    response = JsonResponse({'offers': offers})
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 from django.db.models import Avg
@@ -410,7 +412,7 @@ def company_dashboard_json(request):
     except Exception:
         avg_rating = 0
 
-    return JsonResponse({
+    response = JsonResponse({
         'ok': True,
         'activeOffers': active_offers,
         'totalApplicants': total_applicants,
@@ -421,6 +423,8 @@ def company_dashboard_json(request):
         'acceptanceRate': acceptance_rate,
         'avgRating': avg_rating,
     })
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 @login_required(login_url='frontend:login')
@@ -452,7 +456,9 @@ def company_internships_json(request):
             'end': it.end_date.isoformat() if it.end_date else None,
             'hours': f"{it.total_hours}",
         })
-    return JsonResponse({'internships': items})
+    response = JsonResponse({'internships': items})
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 @login_required(login_url='frontend:login')
@@ -496,7 +502,9 @@ def company_pending_applicants_json(request):
             'requirements': app.opportunity.requirements if app.opportunity else [],
         })
 
-    return JsonResponse({'applications': applications})
+    response = JsonResponse({'applications': applications})
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 @login_required(login_url='frontend:login')

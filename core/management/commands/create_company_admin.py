@@ -31,13 +31,13 @@ class Command(BaseCommand):
             defaults={
                 "email": self.email,
                 "role": "COMPANY",
-                "is_staff": True,
+                "is_staff": False,
                 "is_active": True,
             },
         )
         user.email = self.email
         user.role = "COMPANY"
-        user.is_staff = True
+        user.is_staff = False
         user.is_active = True
         user.company = company
         user.set_password(self.password)

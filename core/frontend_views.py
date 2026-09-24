@@ -139,7 +139,7 @@ def student_dashboard_json(request):
         for opportunity in available_opportunities[:4]
     ]
 
-    return JsonResponse({
+    response = JsonResponse({
         'ok': True,
         'stats': {
             'opportunities': available_opportunities_count,
@@ -161,6 +161,8 @@ def student_dashboard_json(request):
             and student_profile.career_id
         ),
     })
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 def _opportunity_area_key(area_name):
     normalized = (area_name or '').strip().lower()
@@ -736,9 +738,11 @@ def careers_by_institution_json(request, institution_id):
     careers = TechnicalCareer.objects.filter(
         institution_id=institution_id, is_active=True
     ).order_by('name')
-    return JsonResponse({
-        'careers': [{'id': c.id, 'name': c.name} for c in careers]
+    response = JsonResponse({
+        'careers': [{'id': str(c.id), 'name': c.name} for c in careers]
     })
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
 
 
 def user_roles(request):
